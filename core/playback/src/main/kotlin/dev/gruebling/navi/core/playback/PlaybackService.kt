@@ -34,13 +34,14 @@ class PlaybackService : MediaLibraryService() {
     @Inject lateinit var callback: LibraryCallback
     @Inject lateinit var queuePersistence: QueuePersistence
     @Inject lateinit var scrobbler: Scrobbler
+    @Inject lateinit var streamResolver: StreamResolver
 
     private val scope = MainScope()
     private var session: MediaLibrarySession? = null
 
     override fun onCreate() {
         super.onCreate()
-        val player = ExoPlayer.Builder(this)
+        val exoPlayer = ExoPlayer.Builder(this)
             .setMediaSourceFactory(DefaultMediaSourceFactory(audioDataSource))
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
@@ -50,7 +51,9 @@ class PlaybackService : MediaLibraryService() {
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
         // Load the next track in the queue ahead of time: instant skips and gapless transitions.
-        player.preloadConfiguration = ExoPlayer.PreloadConfiguration(/* targetPreloadDurationUs = */ 10_000_000L)
+        exoPlayer.preloadConfiguration = ExoPlayer.PreloadConfiguration(/* targetPreloadDurationUs = */ 10_000_000L)
+        // Everything else (session, scrobbling, queue saving) sees song time, also in transcoded streams.
+        val player = TranscodeSeekingPlayer(exoPlayer, streamResolver)
 
         queuePersistence.attach(player, scope)
         scrobbler.attach(player, scope)

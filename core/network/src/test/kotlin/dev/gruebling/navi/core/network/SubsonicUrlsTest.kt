@@ -43,4 +43,15 @@ class SubsonicUrlsTest {
         assertEquals("stream:s1:320:mp3", SubsonicUrls.streamCacheKey("s1", 320, "mp3"))
         assertEquals("stream:s1:0:raw", SubsonicUrls.streamCacheKey("s1"))
     }
+
+    @Test
+    fun `time offset is sent only when set and gets its own cache key`() {
+        val from = SubsonicUrls.streamUrl(creds, "s1", 128, "opus", timeOffsetSec = 60)
+        assertEquals("60", from.queryParameter("timeOffset"))
+        assertEquals("opus", from.queryParameter("format"))
+        assertFalse("timeOffset" in SubsonicUrls.streamUrl(creds, "s1", 128, "opus").queryParameterNames)
+        assertFalse("format" in SubsonicUrls.streamUrl(creds, "s1").queryParameterNames)
+        assertEquals("stream:s1:128:opus@60", SubsonicUrls.streamCacheKey("s1", 128, "opus", 60))
+        assertEquals("stream:s1:128:opus", SubsonicUrls.streamCacheKey("s1", 128, "opus", 0))
+    }
 }

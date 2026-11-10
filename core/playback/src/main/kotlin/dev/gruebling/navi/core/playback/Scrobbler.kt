@@ -41,6 +41,8 @@ class Scrobbler @Inject constructor(
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        // Same song swapped in place (seeking in a transcoded stream): still the same play.
+        if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED && mediaItem?.mediaId == songId) return
         pauseClock()
         songId = mediaItem?.mediaId
         startedAt = clock.now().toEpochMilliseconds()

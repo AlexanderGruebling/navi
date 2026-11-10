@@ -26,7 +26,8 @@ object SubsonicUrls {
     ): HttpUrl {
         val builder = credentials.serverUrl.toHttpUrl().newBuilder()
         pathSegments.filter { it.isNotEmpty() }.forEach(builder::addPathSegment)
-        query.forEach { (name, value) -> builder.addQueryParameter(name, value) }
+        // null = leave the parameter out (OkHttp would add it without a value)
+        query.forEach { (name, value) -> if (value != null) builder.addQueryParameter(name, value) }
         return builder
             .addQueryParameter("u", credentials.username)
             .addQueryParameter("t", SubsonicAuth.token(credentials.password, salt))
@@ -46,13 +47,28 @@ object SubsonicUrls {
     fun coverArtCacheKey(coverArtId: String, sizePx: Int): String = "cover:$coverArtId:${coverSizeFor(sizePx)}"
 
     /** [maxBitRate] 0 = original. [format] "raw" = no transcoding. */
-    fun streamUrl(credentials: ServerCredentials, songId: String, maxBitRate: Int = 0, format: String? = null): HttpUrl =
+    /**
+     * [timeOffsetSec] > 0 starts a transcoded stream later in the song (OpenSubsonic `transcodeOffset`); the server
+     * ignores it for files it sends unchanged, so only use it when transcoding.
+     */
+    fun streamUrl(
+        credentials: ServerCredentials,
+        songId: String,
+        maxBitRate: Int = 0,
+        format: String? = null,
+        timeOffsetSec: Long = 0,
+    ): HttpUrl =
         build(
             credentials,
             listOf("rest", "stream"),
-            listOf("id" to songId, "maxBitRate" to maxBitRate.toString(), "format" to format),
+            listOf(
+                "id" to songId,
+                "maxBitRate" to maxBitRate.toString(),
+                "format" to format,
+                "timeOffset" to timeOffsetSec.takeIf { it > 0 }?.toString(),
+            ),
         )
 
-    fun streamCacheKey(songId: String, maxBitRate: Int = 0, format: String? = null): String =
-        "stream:$songId:$maxBitRate:${format ?: "raw"}"
+    fun streamCacheKey(songId: String, maxBitRate: Int = 0, format: String? = null, timeOffsetSec: Long = 0): String =
+        "stream:$songId:$maxBitRate:${format ?: "raw"}" + if (timeOffsetSec > 0) "@$timeOffsetSec" else ""
 }
