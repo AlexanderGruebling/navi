@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -176,7 +177,7 @@ private fun FullPlayer(
         }
     }
 
-    Surface(modifier.fillMaxSize(), color = surface) {
+    Surface(modifier.fillMaxSize().testTag("full_player"), color = surface) {
         Column(
             Modifier
                 .fillMaxSize()

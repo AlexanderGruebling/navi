@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -154,6 +155,7 @@ private fun NaviNavigationBar(
                 onClick = { onSelect(tab) },
                 icon = { Icon(painterResource(tab.icon(selected)), contentDescription = null) },
                 label = { Text(stringResource(tab.label)) },
+                modifier = Modifier.testTag("nav_${tab.name.lowercase()}"),
             )
         }
     }

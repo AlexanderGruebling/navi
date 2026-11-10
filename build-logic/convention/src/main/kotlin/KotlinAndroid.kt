@@ -17,6 +17,8 @@ internal fun Project.configureKotlinAndroid() {
                 sourceCompatibility = JavaVersion.VERSION_17
                 targetCompatibility = JavaVersion.VERSION_17
             }
+            // AGP's Compose Preview support needs compiled resources in the unit test setup.
+            testOptions.unitTests.isIncludeAndroidResources = true
         }
     }
     pluginManager.withPlugin("com.android.library") {

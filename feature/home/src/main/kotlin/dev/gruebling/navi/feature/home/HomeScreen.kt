@@ -1,6 +1,7 @@
 package dev.gruebling.navi.feature.home
 
 import android.text.format.DateUtils
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +60,8 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // "Fully drawn" = playlists visible, not just the first frame (startup benchmarks measure this).
+    ReportDrawnWhen { !state.isLoadingFirstTime }
     HomeContent(
         state = state,
         onRefresh = { viewModel.refresh() },
@@ -83,7 +87,7 @@ internal fun HomeContent(
         modifier = Modifier.fillMaxSize(),
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag("home_list"),
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             item(key = "header", contentType = "header") {

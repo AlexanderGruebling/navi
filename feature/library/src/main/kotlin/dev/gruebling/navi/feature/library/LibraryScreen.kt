@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -135,6 +136,7 @@ private fun LibraryContent(
                     selected = tab == state.tab,
                     onClick = { onSelectTab(tab) },
                     label = { Text(stringResource(tab.label)) },
+                    modifier = Modifier.testTag("library_tab_${tab.name.lowercase()}"),
                 )
             }
         }
@@ -200,7 +202,7 @@ private fun AlbumsTab(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().testTag("library_albums"),
     ) {
         item(key = "sort", span = { GridItemSpan(maxLineSpan) }, contentType = "sort") {
             SortRow(sort, albums.itemCount, onSort)

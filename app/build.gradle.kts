@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.navi.android.application)
     alias(libs.plugins.navi.android.compose)
     alias(libs.plugins.navi.hilt)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -33,6 +34,11 @@ android {
     }
 }
 
+baselineProfile {
+    // Profiles are generated on demand (./gradlew :app:generateReleaseBaselineProfile), not on every build.
+    automaticGenerationDuringBuild = false
+}
+
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:navigation"))
@@ -56,6 +62,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":benchmark"))
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
