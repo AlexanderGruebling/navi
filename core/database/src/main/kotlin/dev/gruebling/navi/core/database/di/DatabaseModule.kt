@@ -25,4 +25,5 @@ object DatabaseModule {
     @Provides fun albumDao(db: NaviDatabase) = db.albumDao()
     @Provides fun artistDao(db: NaviDatabase) = db.artistDao()
     @Provides fun playlistDao(db: NaviDatabase) = db.playlistDao()
+    @Provides fun playbackDao(db: NaviDatabase) = db.playbackDao()
 }

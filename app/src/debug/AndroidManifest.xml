@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Debug builds only: drive playback from adb while there is no UI, e.g.
+             adb shell am broadcast -n dev.gruebling.navi.debug/dev.gruebling.navi.debug.DebugPlaybackReceiver \
+                 -a navi.debug.PLAY_PLAYLIST - -es name "FM4 Charts"   -->
+        <receiver
+            android:name=".debug.DebugPlaybackReceiver"
+            android:exported="true" />
+    </application>
+</manifest>

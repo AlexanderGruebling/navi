@@ -16,6 +16,7 @@ import dev.gruebling.navi.core.datastore.EncryptedCredentialStore
 import dev.gruebling.navi.core.datastore.KeystoreSecretCipher
 import dev.gruebling.navi.core.datastore.SecretCipher
 import dev.gruebling.navi.core.datastore.SessionPreferences
+import dev.gruebling.navi.core.datastore.SettingsPreferences
 import javax.inject.Singleton
 
 @Module
@@ -30,5 +31,11 @@ abstract class DataStoreModule {
         @SessionPreferences
         fun sessionPreferences(@ApplicationContext context: Context): DataStore<Preferences> =
             PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("session") }
+
+        @Provides
+        @Singleton
+        @SettingsPreferences
+        fun settingsPreferences(@ApplicationContext context: Context): DataStore<Preferences> =
+            PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("settings") }
     }
 }

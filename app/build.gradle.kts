@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":core:navigation"))
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
+    implementation(project(":core:playback"))
     implementation(project(":feature:login"))
     implementation(project(":feature:home"))
     implementation(project(":feature:search"))

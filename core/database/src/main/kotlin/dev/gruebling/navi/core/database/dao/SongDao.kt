@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.Flow
 interface SongDao {
     @Upsert suspend fun upsert(songs: List<SongEntity>)
 
+    /** Callers must keep [ids] under SQLite's variable limit (999 on older Android). */
+    @Query("SELECT * FROM songs WHERE id IN (:ids)")
+    suspend fun getAll(ids: List<String>): List<SongEntity>
+
     @Query("SELECT * FROM songs WHERE albumId = :albumId ORDER BY IFNULL(disc, 1), IFNULL(track, 0), title")
     fun observeByAlbum(albumId: String): Flow<List<SongEntity>>
 

@@ -4,11 +4,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import dev.gruebling.navi.core.database.dao.AlbumDao
 import dev.gruebling.navi.core.database.dao.ArtistDao
+import dev.gruebling.navi.core.database.dao.PlaybackDao
 import dev.gruebling.navi.core.database.dao.PlaylistDao
 import dev.gruebling.navi.core.database.dao.SongDao
 import dev.gruebling.navi.core.database.entity.AlbumEntity
 import dev.gruebling.navi.core.database.entity.AlbumListEntryEntity
 import dev.gruebling.navi.core.database.entity.ArtistEntity
+import dev.gruebling.navi.core.database.entity.PendingScrobbleEntity
+import dev.gruebling.navi.core.database.entity.QueueItemEntity
+import dev.gruebling.navi.core.database.entity.QueueStateEntity
 import dev.gruebling.navi.core.database.entity.PlaylistEntity
 import dev.gruebling.navi.core.database.entity.PlaylistPrefsEntity
 import dev.gruebling.navi.core.database.entity.PlaylistSongEntity
@@ -27,8 +31,11 @@ import dev.gruebling.navi.core.database.entity.SongEntity
         PlaylistSongEntity::class,
         PlaylistPrefsEntity::class,
         AlbumListEntryEntity::class,
+        QueueItemEntity::class,
+        QueueStateEntity::class,
+        PendingScrobbleEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class NaviDatabase : RoomDatabase() {
@@ -36,4 +43,5 @@ abstract class NaviDatabase : RoomDatabase() {
     abstract fun albumDao(): AlbumDao
     abstract fun artistDao(): ArtistDao
     abstract fun playlistDao(): PlaylistDao
+    abstract fun playbackDao(): PlaybackDao
 }
