@@ -5,7 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -30,19 +36,38 @@ class MainActivity : ComponentActivity() {
         setContent {
             NaviTheme {
                 val session by viewModel.session.collectAsStateWithLifecycle()
-                Crossfade(
-                    targetState = session is SessionState.LoggedIn,
+                // Animate on the screen, not on `session`: the outgoing content is recomposed with the
+                // new state, so branching on `session` inside it drew the login screen while fading out.
+                val screen = when (session) {
+                    SessionState.Loading -> Screen.Loading
+                    SessionState.LoggedOut -> Screen.Login
+                    is SessionState.LoggedIn -> Screen.App
+                }
+                AnimatedContent(
+                    targetState = screen,
                     label = "session",
+                    // Leaving the splash: show the screen right away. Login <-> app (login, logout): fade.
+                    transitionSpec = {
+                        val transform = if (initialState == Screen.Loading) {
+                            EnterTransition.None togetherWith ExitTransition.None
+                        } else {
+                            fadeIn() togetherWith fadeOut()
+                        }
+                        // No size animation: Loading draws nothing, the app would grow out of a zero-size box.
+                        transform using null
+                    },
                     // Test tags become resource ids, so UI Automator (benchmarks, baseline profiles) can find them.
-                    modifier = Modifier.semantics { testTagsAsResourceId = true },
-                ) { loggedIn ->
-                    when {
-                        loggedIn -> NaviApp()
-                        session == SessionState.Loading -> Unit
-                        else -> LoginScreen()
+                    modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
+                ) { target ->
+                    when (target) {
+                        Screen.Loading -> Unit
+                        Screen.Login -> LoginScreen()
+                        Screen.App -> NaviApp()
                     }
                 }
             }
         }
     }
 }
+
+private enum class Screen { Loading, Login, App }
