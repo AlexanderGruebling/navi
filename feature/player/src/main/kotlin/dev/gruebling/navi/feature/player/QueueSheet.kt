@@ -1,6 +1,8 @@
 package dev.gruebling.navi.feature.player
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -53,7 +55,10 @@ internal fun QueueSheet(
                         isCurrent = isCurrent,
                         modifier = Modifier.weight(1f),
                     )
-                    if (!isCurrent) {
+                    if (isCurrent) {
+                        // Same width as the remove button, so the durations line up.
+                        Spacer(Modifier.size(48.dp))
+                    } else {
                         IconButton(onClick = { onRemove(queueIndex) }) {
                             Icon(painterResource(UiR.drawable.ic_close), stringResource(R.string.cd_remove_from_queue))
                         }

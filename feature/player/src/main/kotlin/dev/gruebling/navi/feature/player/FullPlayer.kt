@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
@@ -276,15 +278,13 @@ private fun FullPlayer(
 
 @Composable
 private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
-    val active = MaterialTheme.colorScheme.primary
-    val inactive = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconToggleButton(checked = state.shuffle, onCheckedChange = { viewModel.toggleShuffle() }) {
-            Icon(painterResource(UiR.drawable.ic_shuffle), stringResource(UiR.string.cd_shuffle), tint = if (state.shuffle) active else inactive)
+            ModeIcon(UiR.drawable.ic_shuffle, stringResource(UiR.string.cd_shuffle), on = state.shuffle)
         }
         IconButton(onClick = viewModel::previous, enabled = state.hasPrevious, modifier = Modifier.size(56.dp)) {
             Icon(painterResource(UiR.drawable.ic_skip_previous), stringResource(UiR.string.cd_previous), Modifier.size(36.dp))
@@ -308,8 +308,8 @@ private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
             Icon(painterResource(UiR.drawable.ic_skip_next), stringResource(UiR.string.cd_next), Modifier.size(36.dp))
         }
         IconButton(onClick = viewModel::cycleRepeat) {
-            Icon(
-                painterResource(if (state.repeat == RepeatMode.One) UiR.drawable.ic_repeat_one else UiR.drawable.ic_repeat),
+            ModeIcon(
+                if (state.repeat == RepeatMode.One) UiR.drawable.ic_repeat_one else UiR.drawable.ic_repeat,
                 stringResource(
                     when (state.repeat) {
                         RepeatMode.Off -> R.string.cd_repeat_off
@@ -317,7 +317,27 @@ private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
                         RepeatMode.One -> R.string.cd_repeat_one
                     },
                 ),
-                tint = if (state.repeat == RepeatMode.Off) inactive else active,
+                on = state.repeat != RepeatMode.Off,
+            )
+        }
+    }
+}
+
+/**
+ * Shuffle/repeat icon. "On" is shown by a dot underneath, not only by color: with some wallpapers the dynamic
+ * primary is nearly white and indistinguishable from the "off" tint.
+ */
+@Composable
+private fun ModeIcon(icon: Int, contentDescription: String, on: Boolean) {
+    val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    Box(contentAlignment = Alignment.Center) {
+        Icon(painterResource(icon), contentDescription, tint = color)
+        if (on) {
+            Box(
+                Modifier
+                    .offset(y = 16.dp)
+                    .size(4.dp)
+                    .background(color, CircleShape),
             )
         }
     }
