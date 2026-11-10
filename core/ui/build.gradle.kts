@@ -10,4 +10,5 @@ android {
 dependencies {
     api(project(":core:model"))
     api(libs.kotlinx.collections.immutable)
+    api(libs.coil.compose)
 }

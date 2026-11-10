@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_reshuffled">Reshuffled – show new mix</string>
+    <string name="detail_offline">Can\'t reach the server. Showing saved data.</string>
+    <string name="detail_by">by %1$s</string>
+</resources>

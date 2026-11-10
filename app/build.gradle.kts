@@ -43,6 +43,8 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:search"))
     implementation(project(":feature:library"))
+    implementation(project(":feature:detail"))
+    implementation(project(":feature:player"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
@@ -54,4 +56,6 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

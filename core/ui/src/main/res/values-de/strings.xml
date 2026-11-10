@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_new">Neu</string>
+    <string name="cd_play">Abspielen</string>
+    <string name="cd_pause">Pause</string>
+    <string name="cd_next">Weiter</string>
+    <string name="cd_previous">Zurück</string>
+    <string name="cd_shuffle">Zufallswiedergabe</string>
+    <string name="cd_back">Zurück</string>
+    <string name="cd_settings">Einstellungen</string>
+    <string name="cd_favorite">Zu Favoriten</string>
+    <string name="cd_unfavorite">Aus Favoriten entfernen</string>
+    <plurals name="song_count">
+        <item quantity="one">%d Titel</item>
+        <item quantity="other">%d Titel</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$d Std. %2$d Min.</string>
+    <string name="duration_minutes">%1$d Min.</string>
+</resources>

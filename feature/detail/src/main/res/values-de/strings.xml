@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_reshuffled">Neu gemischt – neuen Mix anzeigen</string>
+    <string name="detail_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
+    <string name="detail_by">von %1$s</string>
+</resources>

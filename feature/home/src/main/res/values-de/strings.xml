@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="greeting_morning">Guten Morgen</string>
+    <string name="greeting_day">Hallo</string>
+    <string name="greeting_evening">Guten Abend</string>
+    <string name="greeting_night">Gute Nacht</string>
+    <string name="group_charts">Charts</string>
+    <string name="group_for_you">Für dich</string>
+    <string name="group_mine">Meine Playlists</string>
+    <string name="section_recently_played">Zuletzt gespielt</string>
+    <string name="section_recently_added">Zuletzt hinzugefügt</string>
+    <string name="section_most_played">Häufig gespielt</string>
+    <string name="section_random">Alben wiederentdecken</string>
+    <string name="home_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
+    <string name="home_updated">Aktualisiert %1$s</string>
+</resources>
