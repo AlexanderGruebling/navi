@@ -41,6 +41,7 @@ import dev.gruebling.navi.core.navigation.TopLevelDestination
 import dev.gruebling.navi.core.playback.PlaybackController
 import dev.gruebling.navi.core.ui.PlaceholderScreen
 import dev.gruebling.navi.feature.detail.AlbumScreen
+import dev.gruebling.navi.feature.detail.ArtistScreen
 import dev.gruebling.navi.feature.detail.PlaylistScreen
 import dev.gruebling.navi.feature.home.HomeScreen
 import dev.gruebling.navi.feature.library.LibraryScreen
@@ -97,10 +98,22 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                     )
                 }
                 entry<SearchRoute> { SearchScreen() }
-                entry<LibraryRoute> { LibraryScreen() }
+                entry<LibraryRoute> {
+                    LibraryScreen(
+                        onOpenPlaylist = { appState.navigate(PlaylistRoute(it)) },
+                        onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+                        onOpenArtist = { appState.navigate(ArtistRoute(it)) },
+                    )
+                }
                 entry<PlaylistRoute> { PlaylistScreen(it.playlistId, onBack = { appState.goBack() }) }
                 entry<AlbumRoute> { AlbumScreen(it.albumId, onBack = { appState.goBack() }) }
-                entry<ArtistRoute> { PlaceholderScreen("Artist") }
+                entry<ArtistRoute> {
+                    ArtistScreen(
+                        it.artistId,
+                        onBack = { appState.goBack() },
+                        onOpenAlbum = { id -> appState.navigate(AlbumRoute(id)) },
+                    )
+                }
                 entry<SettingsRoute> { PlaceholderScreen("Settings") }
             },
             modifier = Modifier

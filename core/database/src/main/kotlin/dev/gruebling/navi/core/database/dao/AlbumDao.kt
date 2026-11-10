@@ -28,6 +28,9 @@ interface AlbumDao {
     @Query("SELECT * FROM albums ORDER BY created DESC")
     fun pagingByAdded(): PagingSource<Int, AlbumEntity>
 
+    @Query("SELECT * FROM albums ORDER BY artist IS NULL, artist COLLATE NOCASE, IFNULL(year, 9999), sortName")
+    fun pagingByArtist(): PagingSource<Int, AlbumEntity>
+
     @Query("SELECT * FROM albums WHERE artistId = :artistId ORDER BY IFNULL(year, 9999), sortName")
     fun observeByArtist(artistId: String): Flow<List<AlbumEntity>>
 

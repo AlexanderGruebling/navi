@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -14,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -32,16 +35,20 @@ fun CoverTile(
     size: Dp = 150.dp,
     isNew: Boolean = false,
     subtitleLines: Int = 2,
+    /** Fill the available width instead of [size] (grids); [size] then only picks the image resolution. */
+    fillWidth: Boolean = false,
+    shape: Shape = MaterialTheme.shapes.medium,
+    textAlign: TextAlign? = null,
 ) {
     Column(
         modifier
-            .width(size)
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier.width(size))
             .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onClick)
             .padding(bottom = 4.dp),
     ) {
         Box {
-            CoverArt(coverArtId, size, shape = MaterialTheme.shapes.medium)
+            CoverArt(coverArtId, size, shape = shape)
             if (isNew) {
                 NewBadge(Modifier.align(Alignment.TopStart).padding(8.dp))
             }
@@ -50,6 +57,8 @@ fun CoverTile(
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
+            textAlign = textAlign,
+            modifier = Modifier.fillMaxWidth(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -58,6 +67,8 @@ fun CoverTile(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = textAlign,
+                modifier = Modifier.fillMaxWidth(),
                 maxLines = subtitleLines,
                 overflow = TextOverflow.Ellipsis,
             )

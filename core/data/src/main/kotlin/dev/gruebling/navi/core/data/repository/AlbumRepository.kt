@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-enum class AlbumSort { Name, RecentlyAdded }
+enum class AlbumSort { RecentlyAdded, Name, Artist }
 
 @Singleton
 class AlbumRepository @Inject constructor(
@@ -60,6 +60,7 @@ class AlbumRepository @Inject constructor(
             when (sort) {
                 AlbumSort.Name -> albumDao.pagingByName()
                 AlbumSort.RecentlyAdded -> albumDao.pagingByAdded()
+                AlbumSort.Artist -> albumDao.pagingByArtist()
             }
         }.flow.map { page -> page.map { it.toDomain() } }
 

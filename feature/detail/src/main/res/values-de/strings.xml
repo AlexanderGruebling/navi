@@ -3,4 +3,8 @@
     <string name="detail_reshuffled">Neu gemischt – neuen Mix anzeigen</string>
     <string name="detail_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
     <string name="detail_by">von %1$s</string>
+    <plurals name="detail_album_count">
+        <item quantity="one">%d Album</item>
+        <item quantity="other">%d Alben</item>
+    </plurals>
 </resources>

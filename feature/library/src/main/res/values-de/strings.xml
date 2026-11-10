@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">Bibliothek</string>
+    <string name="library_tab_playlists">Playlists</string>
+    <string name="library_tab_albums">Alben</string>
+    <string name="library_tab_artists">Künstler</string>
+    <string name="library_tab_favorites">Favoriten</string>
+    <string name="library_songs">Songs</string>
+    <string name="library_sort_recently_added">Zuletzt hinzugefügt</string>
+    <string name="library_sort_name">Name</string>
+    <string name="library_sort_artist">Künstler</string>
+    <string name="library_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
+    <string name="library_favorites_empty">Noch keine Favoriten. Tippe im Player auf den Stern, um Songs hinzuzufügen.</string>
+    <plurals name="album_count">
+        <item quantity="one">%d Album</item>
+        <item quantity="other">%d Alben</item>
+    </plurals>
+</resources>
