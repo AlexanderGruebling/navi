@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlin.time.Clock
 
 /** Lives as long as the process; for work that must outlive a screen (session restore, sync). */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class ApplicationScope
@@ -20,6 +21,9 @@ import kotlinx.coroutines.SupervisorJob
 object CoroutinesModule {
     @Provides @IoDispatcher
     fun io(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    fun clock(): Clock = Clock.System
 
     @Provides @Singleton @ApplicationScope
     fun applicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

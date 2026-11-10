@@ -1,0 +1,69 @@
+package dev.gruebling.navi.core.model
+
+import kotlin.time.Instant
+
+data class Song(
+    val id: SongId,
+    val title: String,
+    val albumId: AlbumId?,
+    val album: String?,
+    val artistId: ArtistId?,
+    val artist: String?,
+    val track: Int?,
+    val disc: Int?,
+    val durationSec: Int,
+    val year: Int?,
+    val coverArt: CoverArtId?,
+    val starred: Boolean,
+    val suffix: String?,
+    val bitRate: Int?,
+    val playCount: Long,
+)
+
+data class Album(
+    val id: AlbumId,
+    val name: String,
+    val artist: String?,
+    val artistId: ArtistId?,
+    val coverArt: CoverArtId?,
+    val songCount: Int,
+    val durationSec: Int,
+    val year: Int?,
+    val genre: String?,
+    val starred: Boolean,
+    val created: Instant?,
+    val playCount: Long,
+)
+
+data class Artist(
+    val id: ArtistId,
+    val name: String,
+    val coverArt: CoverArtId?,
+    val imageUrl: String?,
+    val albumCount: Int,
+    val starred: Boolean,
+    /** First letter group from the server index ("A", "B", "#"). */
+    val indexLetter: String?,
+)
+
+data class AlbumDetail(val album: Album, val songs: List<Song>)
+
+data class ArtistDetail(val artist: Artist, val albums: List<Album>)
+
+/** Server-side album lists used on Home. */
+enum class AlbumListType(val apiValue: String) {
+    RecentlyPlayed("recent"),
+    RecentlyAdded("newest"),
+    MostPlayed("frequent"),
+    Random("random"),
+}
+
+data class Favorites(val songs: List<Song>, val albums: List<Album>, val artists: List<Artist>)
+
+data class SearchResults(val artists: List<Artist>, val albums: List<Album>, val songs: List<Song>) {
+    val isEmpty: Boolean get() = artists.isEmpty() && albums.isEmpty() && songs.isEmpty()
+
+    companion object {
+        val Empty = SearchResults(emptyList(), emptyList(), emptyList())
+    }
+}

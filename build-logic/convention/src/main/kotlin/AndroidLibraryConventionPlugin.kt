@@ -15,7 +15,14 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             defaultConfig.consumerProguardFiles("consumer-rules.pro")
         }
         // Modules without tests yet (screens only) shouldn't fail the build.
-        tasks.withType(Test::class.java).configureEach { failOnNoDiscoveredTests.set(false) }
+        tasks.withType(Test::class.java).configureEach {
+            failOnNoDiscoveredTests.set(false)
+            // Robolectric pokes into java.io.FileDescriptor, which JDK 17+ hides by default.
+            jvmArgs(
+                "--add-opens=java.base/java.io=ALL-UNNAMED",
+                "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+            )
+        }
         dependencies {
             add("testImplementation", libs.lib("junit"))
             add("testImplementation", libs.lib("kotlinx-coroutines-test"))
