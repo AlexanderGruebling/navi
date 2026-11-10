@@ -39,6 +39,8 @@ class PlaybackController @Inject constructor(
 
     private var controller: MediaController? = null
     private var queueCache: List<QueueEntry> = emptyList()
+    private var orderCache: List<Int> = emptyList()
+    private var orderShuffle: Boolean? = null
 
     private val connection = scope.async(Dispatchers.Main, start = CoroutineStart.LAZY) {
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
@@ -113,6 +115,10 @@ class PlaybackController @Inject constructor(
     private fun publish(rebuildQueue: Boolean) {
         val c = controller ?: return
         if (rebuildQueue) queueCache = (0 until c.mediaItemCount).map { c.getMediaItemAt(it).toEntry() }
+        if (rebuildQueue || orderShuffle != c.shuffleModeEnabled) {
+            orderCache = c.playOrder()
+            orderShuffle = c.shuffleModeEnabled
+        }
         val index = c.currentMediaItemIndex
         _state.value = PlayerState(
             current = c.currentMediaItem?.toEntry(),
@@ -121,6 +127,7 @@ class PlaybackController @Inject constructor(
             durationMs = c.duration.takeIf { it != C.TIME_UNSET } ?: c.currentMediaItem?.mediaMetadata?.durationMs ?: 0,
             queue = queueCache,
             currentIndex = if (queueCache.isEmpty()) -1 else index,
+            playOrder = orderCache,
             shuffle = c.shuffleModeEnabled,
             repeat = when (c.repeatMode) {
                 Player.REPEAT_MODE_ONE -> RepeatMode.One
@@ -131,6 +138,18 @@ class PlaybackController @Inject constructor(
             hasPrevious = c.hasPreviousMediaItem() || c.currentPosition > 3_000,
             error = c.playerError?.let { "${it.errorCodeName}: ${it.message}" },
         )
+    }
+
+    private fun Player.playOrder(): List<Int> {
+        val timeline = currentTimeline
+        if (timeline.isEmpty) return emptyList()
+        val order = ArrayList<Int>(timeline.windowCount)
+        var i = timeline.getFirstWindowIndex(shuffleModeEnabled)
+        while (i != C.INDEX_UNSET && order.size < timeline.windowCount) {
+            order += i
+            i = timeline.getNextWindowIndex(i, Player.REPEAT_MODE_OFF, shuffleModeEnabled)
+        }
+        return order
     }
 
     private fun MediaItem.toEntry(): QueueEntry {

@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,7 +64,21 @@ fun MiniPlayer(onExpand: () -> Unit, modifier: Modifier = Modifier, viewModel: P
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
-            Column(Modifier.clickable(onClick = onExpand)) {
+            Column(
+                Modifier
+                    .clickable(onClick = onExpand)
+                    // Swipe up opens the full player, like the system's bottom sheets.
+                    .pointerInput(onExpand) {
+                        var total = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { total = 0f },
+                            onDragEnd = { if (total < -32.dp.toPx()) onExpand() },
+                        ) { change, dy ->
+                            change.consume()
+                            total += dy
+                        }
+                    },
+            ) {
                 Row(
                     Modifier.fillMaxWidth().height(56.dp).padding(start = 8.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,

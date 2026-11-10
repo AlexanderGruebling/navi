@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_unknown_artist">Unknown artist</string>
+    <string name="player_now_playing">Now playing</string>
+    <string name="player_queue">Queue</string>
+    <string name="cd_collapse_player">Close player</string>
+    <string name="cd_open_queue">Show queue</string>
+    <string name="cd_remove_from_queue">Remove from queue</string>
+    <string name="cd_repeat_off">Repeat off</string>
+    <string name="cd_repeat_all">Repeat all</string>
+    <string name="cd_repeat_one">Repeat one</string>
 </resources>

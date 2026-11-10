@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_unknown_artist">Unbekannter Interpret</string>
+    <string name="player_now_playing">Läuft gerade</string>
+    <string name="player_queue">Warteschlange</string>
+    <string name="cd_collapse_player">Player schließen</string>
+    <string name="cd_open_queue">Warteschlange anzeigen</string>
+    <string name="cd_remove_from_queue">Aus der Warteschlange entfernen</string>
+    <string name="cd_repeat_off">Wiederholen aus</string>
+    <string name="cd_repeat_all">Alle wiederholen</string>
+    <string name="cd_repeat_one">Titel wiederholen</string>
 </resources>

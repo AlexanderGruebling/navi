@@ -1,6 +1,7 @@
 package dev.gruebling.navi.ui
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -13,6 +14,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,6 +44,7 @@ import dev.gruebling.navi.feature.detail.AlbumScreen
 import dev.gruebling.navi.feature.detail.PlaylistScreen
 import dev.gruebling.navi.feature.home.HomeScreen
 import dev.gruebling.navi.feature.library.LibraryScreen
+import dev.gruebling.navi.feature.player.FullPlayerHost
 import dev.gruebling.navi.feature.player.MiniPlayer
 import dev.gruebling.navi.feature.search.SearchScreen
 import dev.gruebling.navi.core.ui.R as UiR
@@ -62,12 +68,15 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
         }
     }
 
+    var playerExpanded by rememberSaveable { mutableStateOf(false) }
+
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         // Screens handle the status bar themselves (headers draw behind it); the bottom bar handles the nav bar.
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             Column {
-                MiniPlayer(onExpand = { /* full player: next step */ })
+                MiniPlayer(onExpand = { playerExpanded = true })
                 NaviNavigationBar(current = appState.currentTab, onSelect = appState::selectTab)
             }
         },
@@ -99,6 +108,12 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                 .padding(padding)
                 .consumeWindowInsets(padding),
         )
+    }
+    FullPlayerHost(
+        expanded = playerExpanded,
+        onCollapse = { playerExpanded = false },
+        onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+    )
     }
 }
 

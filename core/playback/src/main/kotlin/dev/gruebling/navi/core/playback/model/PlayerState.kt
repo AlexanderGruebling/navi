@@ -25,6 +25,8 @@ data class PlayerState(
     val durationMs: Long = 0,
     val queue: List<QueueEntry> = emptyList(),
     val currentIndex: Int = -1,
+    /** Queue indices in the order they will play (differs from [queue] order while shuffle is on). */
+    val playOrder: List<Int> = emptyList(),
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.Off,
     val hasNext: Boolean = false,
