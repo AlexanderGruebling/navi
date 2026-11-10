@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_account">Konto</string>
+    <string name="settings_logout">Abmelden</string>
+    <string name="settings_logout_title">Abmelden?</string>
+    <string name="settings_logout_text">Die Wiedergabe stoppt und die auf diesem Handy gespeicherten Daten (Bibliothek, Playlists, Warteschlange) werden gelöscht. Dein Server bleibt unverändert.</string>
+    <string name="settings_cancel">Abbrechen</string>
+    <string name="settings_done">Fertig</string>
+    <string name="settings_streaming">Streaming-Qualität</string>
+    <string name="settings_quality_wifi">WLAN</string>
+    <string name="settings_quality_mobile">Mobile Daten</string>
+    <string name="settings_quality_note">Gilt ab dem nächsten Titel. Niedrigere Qualitäten wandelt der Server um.</string>
+    <string name="settings_quality_original">Original (keine Umwandlung)</string>
+    <string name="settings_quality_high">Hoch · MP3 320 kbps</string>
+    <string name="settings_quality_medium">Mittel · Opus 192 kbps</string>
+    <string name="settings_quality_low">Niedrig · Opus 128 kbps</string>
+    <string name="settings_quality_saver">Datensparend · Opus 96 kbps</string>
+    <string name="settings_playlists">Playlists auf Home</string>
+    <string name="settings_playlists_note">Tippe auf eine Playlist, um die Gruppe zu ändern oder sie anzuheften. Mit den Pfeilen änderst du die Reihenfolge in der Gruppe.</string>
+    <string name="settings_group">Gruppe</string>
+    <string name="settings_group_auto">Automatisch</string>
+    <string name="settings_group_auto_is">Automatisch: %1$s</string>
+    <string name="settings_group_manual">Von dir gewählt</string>
+    <string name="settings_group_charts">Charts</string>
+    <string name="settings_group_foryou">Für dich</string>
+    <string name="settings_group_mine">Meine Playlists</string>
+    <string name="settings_pin">Anheften</string>
+    <string name="settings_pin_note">Immer zuerst in der Gruppe</string>
+    <string name="settings_pinned">Angeheftet</string>
+    <string name="settings_about">Über</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="cd_move_up">Nach oben</string>
+    <string name="cd_move_down">Nach unten</string>
+</resources>

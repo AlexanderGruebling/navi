@@ -117,14 +117,23 @@ class PlaylistRepository @Inject constructor(
         )
     }
 
+    /** Manual order within a group: [ids] in the wanted order get sortOrder 0, 1, 2, … */
+    suspend fun reorder(ids: List<PlaylistId>) {
+        ids.forEachIndexed { index, id ->
+            val prefs = playlistDao.prefs(id.value) ?: PlaylistPrefsEntity(id.value)
+            if (prefs.sortOrder != index) playlistDao.upsertPrefs(prefs.copy(sortOrder = index))
+        }
+    }
+
     private fun PlaylistWithPrefs.toDomain(): Playlist {
         val p = playlist
         val isSmart = p.validUntil != null
+        val override = groupOverride?.let { runCatching { PlaylistGroup.valueOf(it) }.getOrNull() }
         val group = grouping.groupOf(
             name = p.name,
             comment = p.comment,
             isSmart = isSmart,
-            override = groupOverride?.let { runCatching { PlaylistGroup.valueOf(it) }.getOrNull() },
+            override = override,
         )
         return Playlist(
             id = PlaylistId(p.id),
@@ -141,6 +150,7 @@ class PlaylistRepository @Inject constructor(
             sortOrder = sortOrder,
             hasNewContent = !isSmart && p.contentSignature != null && seenSignature != null &&
                 p.contentSignature != seenSignature,
+            groupOverride = override,
         )
     }
 

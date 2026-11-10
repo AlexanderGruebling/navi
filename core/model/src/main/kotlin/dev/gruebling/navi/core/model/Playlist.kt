@@ -23,6 +23,8 @@ data class Playlist(
     val sortOrder: Int?,
     /** The track list changed since the user last opened it (never true for smart playlists). */
     val hasNewContent: Boolean,
+    /** Group chosen by the user in settings; null = automatic ([group] then comes from tags, type and name). */
+    val groupOverride: PlaylistGroup? = null,
 )
 
 data class PlaylistDetail(

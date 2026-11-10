@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":feature:library"))
     implementation(project(":feature:detail"))
     implementation(project(":feature:player"))
+    implementation(project(":feature:settings"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

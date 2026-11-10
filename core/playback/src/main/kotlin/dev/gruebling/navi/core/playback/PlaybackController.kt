@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The app's handle on playback. Connects lazily to [PlaybackService] through a MediaController and mirrors the
@@ -103,6 +104,17 @@ class PlaybackController @Inject constructor(
     }
 
     fun removeFromQueue(index: Int) = command { removeMediaItem(index) }
+
+    /** Stops playback and empties the queue (logout). Suspends until the player has applied it. */
+    suspend fun stopAndClear() {
+        if (!connection.isActive && !connection.isCompleted) return
+        withContext(Dispatchers.Main.immediate) {
+            connection.await().run {
+                stop()
+                clearMediaItems()
+            }
+        }
+    }
     fun moveInQueue(from: Int, to: Int) = command { moveMediaItem(from, to) }
 
     private fun Player.nextMediaItemIndexOrEnd(): Int =

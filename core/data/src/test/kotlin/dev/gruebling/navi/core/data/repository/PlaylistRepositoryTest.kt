@@ -10,6 +10,7 @@ import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
 import dev.gruebling.navi.core.model.PlaylistSettings
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -141,6 +142,33 @@ class PlaylistRepositoryTest {
         repo.refreshPlaylists().getOrThrow()
         val forYou = repo.observePlaylists().first().filter { it.group == PlaylistGroup.ForYou }
         assertEquals(listOf("On Repeat", "90s Mix"), forYou.map { it.name }) // pinned first
+    }
+
+    @Test
+    fun `group override is exposed and can be reset to automatic`() = runTest {
+        repo.refreshPlaylists().getOrThrow()
+        repo.updateSettings(PlaylistId("charts"), PlaylistSettings(groupOverride = PlaylistGroup.Mine))
+        val charts = repo.observePlaylists().first().single { it.id.value == "charts" }
+        assertEquals(PlaylistGroup.Mine, charts.group)
+        assertEquals(PlaylistGroup.Mine, charts.groupOverride)
+
+        repo.updateSettings(PlaylistId("charts"), PlaylistSettings(groupOverride = null))
+        val reset = repo.observePlaylists().first().single { it.id.value == "charts" }
+        assertEquals(PlaylistGroup.Charts, reset.group)
+        assertEquals(null, reset.groupOverride)
+    }
+
+    @Test
+    fun `reorder sets the order within a group and keeps other settings`() = runTest {
+        repo.refreshPlaylists().getOrThrow()
+        // "On Repeat" joins "90s Mix" in For you, pinned off, then the user puts it second, then first.
+        repo.updateSettings(PlaylistId("repeat"), PlaylistSettings(groupOverride = PlaylistGroup.ForYou))
+        repo.reorder(listOf(PlaylistId("mix"), PlaylistId("repeat")))
+        fun forYou() = repo.observePlaylists().map { list -> list.filter { it.group == PlaylistGroup.ForYou }.map { it.name } }
+        assertEquals(listOf("90s Mix", "On Repeat"), forYou().first())
+        repo.reorder(listOf(PlaylistId("repeat"), PlaylistId("mix")))
+        assertEquals(listOf("On Repeat", "90s Mix"), forYou().first())
+        assertEquals(PlaylistGroup.ForYou, repo.observePlaylists().first().single { it.id.value == "repeat" }.groupOverride)
     }
 
     @Test

@@ -29,6 +29,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import dev.gruebling.navi.BuildConfig
 import dev.gruebling.navi.R
 import dev.gruebling.navi.core.navigation.AlbumRoute
 import dev.gruebling.navi.core.navigation.ArtistRoute
@@ -39,7 +40,6 @@ import dev.gruebling.navi.core.navigation.SearchRoute
 import dev.gruebling.navi.core.navigation.SettingsRoute
 import dev.gruebling.navi.core.navigation.TopLevelDestination
 import dev.gruebling.navi.core.playback.PlaybackController
-import dev.gruebling.navi.core.ui.PlaceholderScreen
 import dev.gruebling.navi.feature.detail.AlbumScreen
 import dev.gruebling.navi.feature.detail.ArtistScreen
 import dev.gruebling.navi.feature.detail.PlaylistScreen
@@ -48,6 +48,7 @@ import dev.gruebling.navi.feature.library.LibraryScreen
 import dev.gruebling.navi.feature.player.FullPlayerHost
 import dev.gruebling.navi.feature.player.MiniPlayer
 import dev.gruebling.navi.feature.search.SearchScreen
+import dev.gruebling.navi.feature.settings.SettingsScreen
 import dev.gruebling.navi.core.ui.R as UiR
 
 @EntryPoint
@@ -119,7 +120,12 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                         onOpenAlbum = { id -> appState.navigate(AlbumRoute(id)) },
                     )
                 }
-                entry<SettingsRoute> { PlaceholderScreen("Settings") }
+                entry<SettingsRoute> {
+                    SettingsScreen(
+                        versionName = BuildConfig.VERSION_NAME + if (BuildConfig.DEBUG) " (debug)" else "",
+                        onBack = { appState.goBack() },
+                    )
+                }
             },
             modifier = Modifier
                 .fillMaxSize()
