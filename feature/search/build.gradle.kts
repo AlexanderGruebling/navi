@@ -5,3 +5,8 @@ plugins {
 android {
     namespace = "dev.gruebling.navi.feature.search"
 }
+
+dependencies {
+    implementation(project(":core:data"))
+    implementation(project(":core:playback"))
+}

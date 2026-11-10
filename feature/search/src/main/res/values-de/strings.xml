@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_hint">Songs, Alben, Künstler</string>
+    <string name="search_empty_hint">Durchsuche deine Bibliothek: Songs, Alben und Künstler.</string>
+    <string name="search_no_results">Nichts gefunden für „%1$s“.</string>
+    <string name="search_offline_no_results">Nichts gefunden für „%1$s“ in den gespeicherten Daten. Der Server ist nicht erreichbar.</string>
+    <string name="search_offline">Server nicht erreichbar. Nur gespeicherte Ergebnisse.</string>
+    <string name="search_artists">Künstler</string>
+    <string name="search_albums">Alben</string>
+    <string name="search_songs">Songs</string>
+    <string name="cd_clear_search">Suche löschen</string>
+</resources>

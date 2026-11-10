@@ -97,7 +97,12 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                         onOpenSettings = { appState.navigate(SettingsRoute) },
                     )
                 }
-                entry<SearchRoute> { SearchScreen() }
+                entry<SearchRoute> {
+                    SearchScreen(
+                        onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+                        onOpenArtist = { appState.navigate(ArtistRoute(it)) },
+                    )
+                }
                 entry<LibraryRoute> {
                     LibraryScreen(
                         onOpenPlaylist = { appState.navigate(PlaylistRoute(it)) },
