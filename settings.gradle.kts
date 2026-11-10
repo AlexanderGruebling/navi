@@ -19,8 +19,12 @@ rootProject.name = "navi"
 
 include(":app")
 include(":core:model")
+include(":core:network")
+include(":core:datastore")
+include(":core:data")
 include(":core:navigation")
 include(":core:ui")
+include(":feature:login")
 include(":feature:home")
 include(":feature:search")
 include(":feature:library")

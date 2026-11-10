@@ -1,0 +1,98 @@
+package dev.gruebling.navi.core.network
+
+import dev.gruebling.navi.core.model.ServerCredentials
+import dev.gruebling.navi.core.network.model.SubsonicEnvelope
+import dev.gruebling.navi.core.network.model.SubsonicResponse
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.Tag
+
+/**
+ * Subsonic REST endpoints. Paths are relative to the placeholder base URL; the server, auth parameters and
+ * `f=json` are added by [SubsonicRequestInterceptor]. Unwrap results with [ok].
+ */
+interface SubsonicApi {
+    /** [credentials] overrides the stored login, to test a server before saving it. */
+    @GET("rest/ping")
+    suspend fun ping(@Tag credentials: ServerCredentials? = null): SubsonicEnvelope
+
+    @GET("rest/getOpenSubsonicExtensions")
+    suspend fun getOpenSubsonicExtensions(@Tag credentials: ServerCredentials? = null): SubsonicEnvelope
+
+    @GET("rest/getUser")
+    suspend fun getUser(@Query("username") username: String): SubsonicEnvelope
+
+    @GET("rest/getPlaylists")
+    suspend fun getPlaylists(): SubsonicEnvelope
+
+    @GET("rest/getPlaylist")
+    suspend fun getPlaylist(@Query("id") id: String): SubsonicEnvelope
+
+    /** [type]: newest, recent, frequent, random, alphabeticalByName, alphabeticalByArtist, starred, highest. */
+    @GET("rest/getAlbumList2")
+    suspend fun getAlbumList2(
+        @Query("type") type: String,
+        @Query("size") size: Int = 50,
+        @Query("offset") offset: Int = 0,
+    ): SubsonicEnvelope
+
+    @GET("rest/getAlbum")
+    suspend fun getAlbum(@Query("id") id: String): SubsonicEnvelope
+
+    @GET("rest/getArtists")
+    suspend fun getArtists(): SubsonicEnvelope
+
+    @GET("rest/getArtist")
+    suspend fun getArtist(@Query("id") id: String): SubsonicEnvelope
+
+    @GET("rest/search3")
+    suspend fun search3(
+        @Query("query") query: String,
+        @Query("artistCount") artistCount: Int = 10,
+        @Query("albumCount") albumCount: Int = 20,
+        @Query("songCount") songCount: Int = 30,
+    ): SubsonicEnvelope
+
+    @GET("rest/getStarred2")
+    suspend fun getStarred2(): SubsonicEnvelope
+
+    @GET("rest/getRandomSongs")
+    suspend fun getRandomSongs(@Query("size") size: Int = 50): SubsonicEnvelope
+
+    @GET("rest/star")
+    suspend fun star(
+        @Query("id") songIds: List<String> = emptyList(),
+        @Query("albumId") albumIds: List<String> = emptyList(),
+        @Query("artistId") artistIds: List<String> = emptyList(),
+    ): SubsonicEnvelope
+
+    @GET("rest/unstar")
+    suspend fun unstar(
+        @Query("id") songIds: List<String> = emptyList(),
+        @Query("albumId") albumIds: List<String> = emptyList(),
+        @Query("artistId") artistIds: List<String> = emptyList(),
+    ): SubsonicEnvelope
+
+    /** [submission] false = "now playing", true = counts as a play. [time] in ms since epoch. */
+    @GET("rest/scrobble")
+    suspend fun scrobble(
+        @Query("id") songId: String,
+        @Query("submission") submission: Boolean,
+        @Query("time") time: Long? = null,
+    ): SubsonicEnvelope
+}
+
+/** Subsonic reports errors with HTTP 200 and `status: failed`. */
+class SubsonicException(val code: Int, message: String?) : Exception("Subsonic error $code: $message") {
+    companion object {
+        const val WRONG_CREDENTIALS = 40
+        const val NOT_AUTHORIZED = 50
+        const val NOT_FOUND = 70
+    }
+}
+
+/** Returns the response, or throws [SubsonicException] if the server reported an error. */
+fun SubsonicEnvelope.ok(): SubsonicResponse {
+    if (!response.isOk) throw SubsonicException(response.error?.code ?: 0, response.error?.message)
+    return response
+}

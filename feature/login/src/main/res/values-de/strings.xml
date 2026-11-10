@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Mit deinem Server verbinden</string>
+    <string name="login_subtitle">Navidrome oder ein anderer Subsonic-kompatibler Server</string>
+    <string name="login_server">Serveradresse</string>
+    <string name="login_server_hint">https://music.example.com</string>
+    <string name="login_username">Benutzername</string>
+    <string name="login_password">Passwort</string>
+    <string name="login_show_password">Passwort anzeigen</string>
+    <string name="login_hide_password">Passwort verbergen</string>
+    <string name="login_connect">Verbinden</string>
+    <string name="login_http_warning">Unverschlüsselte Verbindung: Der Passwort-Hash wird im Klartext übertragen.</string>
+    <string name="login_error_invalid_url">Das sieht nicht nach einer Serveradresse aus.</string>
+    <string name="login_error_credentials">Benutzername oder Passwort falsch.</string>
+    <string name="login_error_unknown_host">Server nicht gefunden. Prüfe die Adresse oder ob du im richtigen Netz bzw. VPN bist.</string>
+    <string name="login_error_unreachable">Der Server antwortet nicht.</string>
+    <string name="login_error_tls">Sichere Verbindung fehlgeschlagen (Zertifikatsproblem).</string>
+    <string name="login_error_not_subsonic">Unter der Adresse antwortet etwas, aber kein Subsonic-Server. Prüfe den Pfad.</string>
+    <string name="login_error_server">Serverfehler: %1$s</string>
+</resources>

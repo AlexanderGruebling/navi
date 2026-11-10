@@ -1,0 +1,5 @@
+{"subsonic-response":{"status":"ok","version":"1.16.1","type":"navidrome","serverVersion":"0.64.2 (10114574)","openSubsonic":true,
+ "playlists":{"playlist":[
+  {"id":"pl1","name":"FM4 Charts","comment":"FM4 Top 40","songCount":40,"duration":9012,"public":true,"owner":"sheet","created":"2026-10-24T02:30:11.123Z","changed":"2026-11-08T02:44:07.000Z","coverArt":"pl-pl1_6745a1b2","readonly":false,"someFutureField":{"x":1}},
+  {"id":"pl2","name":"90s Mix","comment":"From Austropop to Eurodance.","songCount":50,"duration":12000,"public":false,"owner":"sheet","created":"2026-11-02T10:00:00Z","changed":"2026-11-10T08:00:00Z","coverArt":"pl-pl2_0","readonly":true,"validUntil":"2026-11-10T08:05:00Z"}
+ ]}}}
