@@ -15,4 +15,8 @@ dependencies {
     implementation(libs.androidx.media3.datasource.okhttp)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.media3.test.utils)
 }
