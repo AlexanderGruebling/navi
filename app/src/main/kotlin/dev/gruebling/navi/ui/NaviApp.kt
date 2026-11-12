@@ -158,6 +158,7 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
         expanded = playerExpanded,
         onCollapse = { playerExpanded = false },
         onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+        onOpenArtist = { appState.navigate(ArtistRoute(it)) },
     )
     }
 }

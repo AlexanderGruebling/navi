@@ -86,6 +86,7 @@ fun FullPlayerHost(
     expanded: Boolean,
     onCollapse: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
@@ -136,6 +137,7 @@ fun FullPlayerHost(
                 viewModel = viewModel,
                 onCollapse = onCollapse,
                 onOpenAlbum = { onOpenAlbum(it); onCollapse() },
+                onOpenArtist = { onOpenArtist(it); onCollapse() },
                 modifier = Modifier
                     .graphicsLayer {
                         translationY = offset.value
@@ -169,6 +171,7 @@ private fun FullPlayer(
     viewModel: PlayerViewModel,
     onCollapse: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val current = state.current
@@ -246,13 +249,20 @@ private fun FullPlayer(
                         // Long titles scroll slowly instead of being cut off.
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 2_000),
                     )
-                    // The album is in the header above (and opens from there).
+                    // The album is in the header above (and opens from there); the artist opens from here.
+                    val artistId = current?.artistId
                     Text(
                         current?.artist ?: stringResource(R.string.player_unknown_artist),
                         style = MaterialTheme.typography.bodyLarge,
                         color = NaviColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable(
+                                enabled = artistId != null,
+                                onClickLabel = stringResource(R.string.cd_open_artist),
+                            ) { artistId?.let(onOpenArtist) },
                     )
                 }
                 IconToggleButton(checked = isStarred, onCheckedChange = { viewModel.toggleStar() }, modifier = Modifier.offset(x = 10.dp)) {

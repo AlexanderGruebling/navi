@@ -14,4 +14,5 @@
     <string name="cd_open_lyrics">Songtext anzeigen</string>
     <string name="cd_close_lyrics">Songtext schließen</string>
     <string name="cd_lyrics_seek">Ab dieser Zeile abspielen</string>
+    <string name="cd_open_artist">Interpret öffnen</string>
 </resources>

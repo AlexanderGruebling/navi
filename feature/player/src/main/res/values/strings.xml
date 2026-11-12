@@ -14,4 +14,5 @@
     <string name="cd_open_lyrics">Show lyrics</string>
     <string name="cd_close_lyrics">Close lyrics</string>
     <string name="cd_lyrics_seek">Play from this line</string>
+    <string name="cd_open_artist">Open artist</string>
 </resources>
