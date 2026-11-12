@@ -22,6 +22,8 @@ network is slow, and streams in a sensible quality on mobile data.
   position restored after restart, 500 MB audio cache.
 - **Streaming quality**: separate presets for Wi-Fi and mobile data (Original, MP3 320, Opus 192/128/96).
   Seeking works in transcoded streams too (see below).
+- **Instant mix**: a radio from an artist (artist page) or from the playing song (full player), built from the
+  server's similar songs. Near the end of the queue it adds more songs similar to the one playing.
 - **Scrobbling** to the server the way Last.fm counts plays: "now playing" on start, a play after half the track
   or 4 minutes of actual listening.
 - **Settings**: quality presets, per-playlist group override, pinning and ordering, logout.

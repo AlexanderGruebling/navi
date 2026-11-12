@@ -21,4 +21,7 @@
     </plurals>
     <string name="duration_hours_minutes">%1$d h %2$d min</string>
     <string name="duration_minutes">%1$d min</string>
+    <string name="cd_instant_mix">Instant mix</string>
+    <string name="mix_unavailable">No mix available: the server has no similar songs for this.</string>
+    <string name="mix_failed">Couldn\'t load the mix. Check the connection and try again.</string>
 </resources>

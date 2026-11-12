@@ -7,9 +7,13 @@ import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.data.repository.LyricsRepository
 import dev.gruebling.navi.core.model.Lyrics
 import dev.gruebling.navi.core.model.SongId
+import dev.gruebling.navi.core.playback.InstantMix
 import dev.gruebling.navi.core.playback.PlaybackController
 import dev.gruebling.navi.core.playback.model.PlayerState
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import dev.gruebling.navi.core.ui.R as UiR
 
 /** Lyrics of the current song, as the player shows them. */
 sealed interface LyricsState {
@@ -33,8 +38,16 @@ class PlayerViewModel @Inject constructor(
     private val playback: PlaybackController,
     private val favorites: FavoritesRepository,
     private val lyricsRepository: LyricsRepository,
+    private val instantMix: InstantMix,
 ) : ViewModel() {
     val state: StateFlow<PlayerState> = playback.state
+
+    private val _isStartingMix = MutableStateFlow(false)
+    val isStartingMix: StateFlow<Boolean> = _isStartingMix
+
+    /** Why a mix didn't start, as string resources to show once. */
+    private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val messages: SharedFlow<Int> = _messages
 
     /** Whether the current track is starred; follows optimistic updates from anywhere in the app. */
     val isCurrentStarred: StateFlow<Boolean> = combine(
@@ -68,6 +81,23 @@ class PlayerViewModel @Inject constructor(
     fun cycleRepeat() = playback.cycleRepeat()
     fun skipTo(queueIndex: Int) = playback.skipToQueueIndex(queueIndex)
     fun remove(queueIndex: Int) = playback.removeFromQueue(queueIndex)
+
+    /** The current song keeps playing; what follows becomes songs similar to it, and keeps growing. */
+    fun startMix() {
+        if (_isStartingMix.value) return
+        viewModelScope.launch {
+            _isStartingMix.value = true
+            try {
+                when (instantMix.startFromCurrentSong()) {
+                    InstantMix.Outcome.Started -> Unit
+                    InstantMix.Outcome.NoSongs -> _messages.tryEmit(UiR.string.mix_unavailable)
+                    InstantMix.Outcome.Failed -> _messages.tryEmit(UiR.string.mix_failed)
+                }
+            } finally {
+                _isStartingMix.value = false
+            }
+        }
+    }
 
     fun toggleStar() {
         val id = state.value.current?.songId ?: return

@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.RepeatMode
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
+import dev.gruebling.navi.core.ui.component.MessageToasts
 import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.WaveformSeekBar
 import dev.gruebling.navi.core.ui.component.formatTrackTime
@@ -176,6 +177,8 @@ private fun FullPlayer(
 ) {
     val current = state.current
     val isStarred by viewModel.isCurrentStarred.collectAsStateWithLifecycle()
+    val isStartingMix by viewModel.isStartingMix.collectAsStateWithLifecycle()
+    MessageToasts(viewModel.messages)
     var showQueue by rememberSaveable { mutableStateOf(false) }
 
     // Polled position, read only by the seek bar's draw phase and the small time labels.
@@ -210,6 +213,8 @@ private fun FullPlayer(
                 IconButton(onClick = onCollapse) {
                     Icon(painterResource(UiR.drawable.ic_expand_more), stringResource(R.string.cd_collapse_player), Modifier.size(26.dp))
                 }
+                // Balances the mix button on the right, so the title stays centered.
+                Spacer(Modifier.size(48.dp))
                 Column(
                     Modifier
                         .weight(1f)
@@ -222,6 +227,13 @@ private fun FullPlayer(
                     MonoLabel(stringResource(R.string.player_now_playing))
                     current?.album?.let {
                         Text(it, style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                IconButton(onClick = viewModel::startMix, enabled = current != null && !isStartingMix) {
+                    if (isStartingMix) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(painterResource(UiR.drawable.ic_mix), stringResource(UiR.string.cd_instant_mix))
                     }
                 }
                 IconButton(onClick = { showQueue = true }) {

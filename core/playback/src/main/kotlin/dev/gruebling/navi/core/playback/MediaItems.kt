@@ -12,9 +12,11 @@ object MediaItems {
     private const val EXTRA_ALBUM_ID = "albumId"
     private const val EXTRA_ARTIST_ID = "artistId"
     private const val EXTRA_COVER_ART = "coverArt"
+    private const val EXTRA_FROM_MIX = "fromMix"
     const val ARTWORK_SIZE = 600
 
-    fun fromSong(song: Song): MediaItem = build(
+    /** [fromMix]: added by an instant mix (see MixExtender). */
+    fun fromSong(song: Song, fromMix: Boolean = false): MediaItem = build(
         songId = song.id.value,
         title = song.title,
         artist = song.artist,
@@ -23,6 +25,7 @@ object MediaItems {
         artistId = song.artistId?.value,
         coverArt = song.coverArt?.value,
         durationMs = song.durationSec * 1000L,
+        fromMix = fromMix,
     )
 
     fun fromEntity(song: SongEntity): MediaItem = build(
@@ -31,6 +34,7 @@ object MediaItems {
 
     fun fromQueue(item: QueueItemEntity): MediaItem = build(
         item.songId, item.title, item.artist, item.album, item.albumId, item.artistId, item.coverArt, item.durationMs,
+        item.fromMix,
     )
 
     fun toQueue(position: Int, item: MediaItem): QueueItemEntity {
@@ -45,6 +49,7 @@ object MediaItems {
             artistId = m.extras?.getString(EXTRA_ARTIST_ID),
             coverArt = m.extras?.getString(EXTRA_COVER_ART),
             durationMs = m.durationMs ?: 0L,
+            fromMix = isFromMix(item),
         )
     }
 
@@ -54,6 +59,7 @@ object MediaItems {
     fun coverArtId(item: MediaItem): String? = item.mediaMetadata.extras?.getString(EXTRA_COVER_ART)
     fun albumId(item: MediaItem): String? = item.mediaMetadata.extras?.getString(EXTRA_ALBUM_ID)
     fun artistId(item: MediaItem): String? = item.mediaMetadata.extras?.getString(EXTRA_ARTIST_ID)
+    fun isFromMix(item: MediaItem): Boolean = item.mediaMetadata.extras?.getBoolean(EXTRA_FROM_MIX) == true
 
     private fun build(
         songId: String,
@@ -64,11 +70,13 @@ object MediaItems {
         artistId: String?,
         coverArt: String?,
         durationMs: Long,
+        fromMix: Boolean = false,
     ): MediaItem {
         val extras = Bundle().apply {
             putString(EXTRA_ALBUM_ID, albumId)
             putString(EXTRA_ARTIST_ID, artistId)
             putString(EXTRA_COVER_ART, coverArt)
+            if (fromMix) putBoolean(EXTRA_FROM_MIX, true)
         }
         return MediaItem.Builder()
             .setMediaId(songId)

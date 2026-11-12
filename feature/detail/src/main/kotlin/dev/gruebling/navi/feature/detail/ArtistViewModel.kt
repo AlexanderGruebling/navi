@@ -13,13 +13,16 @@ import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.model.Album
 import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.model.ArtistId
+import dev.gruebling.navi.core.playback.InstantMix
 import dev.gruebling.navi.core.playback.PlaybackController
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,6 +33,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import dev.gruebling.navi.core.ui.R as UiR
 
 @Immutable
 data class ArtistUiState(
@@ -45,6 +49,8 @@ data class ArtistUiState(
     val refreshFailed: Boolean = false,
     /** Collecting the songs of all albums for "shuffle all". */
     val isPreparingPlayback: Boolean = false,
+    /** Loading an instant mix. */
+    val isStartingMix: Boolean = false,
 )
 
 @HiltViewModel(assistedFactory = ArtistViewModel.Factory::class)
@@ -54,6 +60,7 @@ class ArtistViewModel @AssistedInject constructor(
     private val albums: AlbumRepository,
     private val favorites: FavoritesRepository,
     private val playback: PlaybackController,
+    private val instantMix: InstantMix,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -65,14 +72,19 @@ class ArtistViewModel @AssistedInject constructor(
     private val preparing = MutableStateFlow(false)
     private val detail = artists.observeArtist(id)
     private val info = artists.observeArtistInfo(id)
-    private val status = combine(refreshFailed, preparing, ::Pair)
+    private val startingMix = MutableStateFlow(false)
+    private val status = combine(refreshFailed, preparing, startingMix, ::Triple)
+
+    /** Why a mix didn't start, as string resources to show once. */
+    private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val messages: SharedFlow<Int> = _messages
 
     val state: StateFlow<ArtistUiState> = combine(
         detail,
         info,
         playback.state.map { it.current?.songId }.distinctUntilChanged(),
         status,
-    ) { d, extras, currentSongId, (failed, isPreparing) ->
+    ) { d, extras, currentSongId, (failed, isPreparing, isStartingMix) ->
         ArtistUiState(
             artist = d?.artist,
             albums = d?.albums.orEmpty().toImmutableList(),
@@ -95,6 +107,7 @@ class ArtistViewModel @AssistedInject constructor(
             isLoading = d == null || (d.albums.isEmpty() && d.artist.albumCount > 0),
             refreshFailed = failed,
             isPreparingPlayback = isPreparing,
+            isStartingMix = isStartingMix,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ArtistUiState())
 
@@ -109,6 +122,23 @@ class ArtistViewModel @AssistedInject constructor(
     fun toggleStar() {
         val artist = state.value.artist ?: return
         viewModelScope.launch { favorites.setStarred(artist.id, !artist.starred) }
+    }
+
+    /** Plays songs by this artist and similar ones; the queue keeps growing (see MixExtender). */
+    fun startMix() {
+        if (startingMix.value) return
+        viewModelScope.launch {
+            startingMix.value = true
+            try {
+                when (instantMix.startFromArtist(id.value)) {
+                    InstantMix.Outcome.Started -> Unit
+                    InstantMix.Outcome.NoSongs -> _messages.tryEmit(UiR.string.mix_unavailable)
+                    InstantMix.Outcome.Failed -> _messages.tryEmit(UiR.string.mix_failed)
+                }
+            } finally {
+                startingMix.value = false
+            }
+        }
     }
 
     /** Plays the top songs, starting at [index]. */

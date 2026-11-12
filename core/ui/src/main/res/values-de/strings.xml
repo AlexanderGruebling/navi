@@ -19,4 +19,7 @@
     </plurals>
     <string name="duration_hours_minutes">%1$d Std. %2$d Min.</string>
     <string name="duration_minutes">%1$d Min.</string>
+    <string name="cd_instant_mix">Mix starten</string>
+    <string name="mix_unavailable">Kein Mix verfügbar: Der Server kennt dazu keine ähnlichen Songs.</string>
+    <string name="mix_failed">Mix konnte nicht geladen werden. Prüfe die Verbindung und versuch es noch einmal.</string>
 </resources>

@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
 import dev.gruebling.navi.core.ui.component.CoverTile
+import dev.gruebling.navi.core.ui.component.MessageToasts
 import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.StatusLabel
@@ -78,12 +80,14 @@ fun ArtistScreen(
         it.create(artistId)
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    MessageToasts(viewModel.messages)
     ArtistContent(
         state = state,
         onBack = onBack,
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
         onShuffle = viewModel::shuffleAll,
+        onStartMix = viewModel::startMix,
         onToggleStar = viewModel::toggleStar,
         onPlayTopSong = viewModel::playTopSong,
     )
@@ -101,6 +105,7 @@ private fun ArtistContent(
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     onShuffle: () -> Unit,
+    onStartMix: () -> Unit,
     onToggleStar: () -> Unit,
     onPlayTopSong: (Int) -> Unit,
 ) {
@@ -148,6 +153,13 @@ private fun ArtistContent(
                                 stringResource(if (starred) UiR.string.cd_unfavorite else UiR.string.cd_favorite),
                                 tint = if (starred) MaterialTheme.colorScheme.primary else NaviColors.TextSecondary,
                             )
+                        }
+                        IconButton(onClick = onStartMix, enabled = artist != null && !state.isStartingMix) {
+                            if (state.isStartingMix) {
+                                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(painterResource(UiR.drawable.ic_mix), stringResource(UiR.string.cd_instant_mix))
+                            }
                         }
                         Spacer(Modifier.width(8.dp))
                         AccentPlayButton(

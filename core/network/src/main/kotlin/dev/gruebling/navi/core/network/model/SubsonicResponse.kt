@@ -31,6 +31,7 @@ data class SubsonicResponse(
     val artist: Artist? = null,
     val artistInfo2: ArtistInfo2? = null,
     val topSongs: Songs? = null,
+    val similarSongs: Songs? = null,
     val searchResult3: SearchResult3? = null,
     val starred2: Starred2? = null,
     val randomSongs: Songs? = null,

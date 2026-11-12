@@ -57,6 +57,13 @@ interface SubsonicApi {
     @GET("rest/getTopSongs")
     suspend fun getTopSongs(@Query("artist") artist: String, @Query("count") count: Int = 10): SubsonicEnvelope
 
+    /**
+     * Songs similar to a song, album or artist ([id] may be any of them), for an instant mix. Navidrome builds the
+     * list from Last.fm similarity and returns only songs in the library.
+     */
+    @GET("rest/getSimilarSongs")
+    suspend fun getSimilarSongs(@Query("id") id: String, @Query("count") count: Int = 50): SubsonicEnvelope
+
     @GET("rest/search3")
     suspend fun search3(
         @Query("query") query: String,
