@@ -29,4 +29,20 @@
     <string name="song_add_to_queue">Add to queue</string>
     <string name="song_queued_next">Plays next</string>
     <string name="song_queued_end">Added to queue</string>
+    <string name="cd_download">Download</string>
+    <string name="cd_remove_download">Remove download</string>
+    <string name="download_done">Downloaded</string>
+    <string name="download_progress">Downloading %1$d / %2$d</string>
+    <string name="download_preparing">Preparing download</string>
+    <string name="download_waiting_wifi">Waiting for Wi-Fi · %1$d / %2$d</string>
+    <string name="download_waiting_network">Waiting for network · %1$d / %2$d</string>
+    <string name="download_incomplete">%1$d of %2$d downloaded</string>
+    <string name="download_remove_title">Remove download?</string>
+    <string name="download_remove_text">The songs are deleted from this device, except those another download still contains.</string>
+    <string name="download_remove">Remove</string>
+    <string name="action_cancel">Cancel</string>
+    <plurals name="skipped_not_downloaded">
+        <item quantity="one">No network: skipped %d song that isn\'t downloaded</item>
+        <item quantity="other">No network: skipped %d songs that aren\'t downloaded</item>
+    </plurals>
 </resources>

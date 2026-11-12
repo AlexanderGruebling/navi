@@ -22,8 +22,8 @@ import dev.gruebling.navi.core.database.entity.PlaylistSongEntity
 import dev.gruebling.navi.core.database.entity.SongEntity
 
 /**
- * Local cache of the server library. It is a cache, not the source of truth: until there are offline downloads,
- * schema changes may simply drop and rebuild it (see DatabaseModule).
+ * Local cache of the server library. It is a cache, not the source of truth: schema changes may simply drop and
+ * rebuild it (see DatabaseModule). Offline downloads keep their own records outside it (core:download).
  */
 @Database(
     entities = [

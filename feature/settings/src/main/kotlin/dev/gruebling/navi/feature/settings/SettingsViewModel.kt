@@ -8,6 +8,7 @@ import dev.gruebling.navi.core.data.repository.PlaylistRepository
 import dev.gruebling.navi.core.data.session.SessionManager
 import dev.gruebling.navi.core.data.session.SessionState
 import dev.gruebling.navi.core.datastore.StreamingSettingsStore
+import dev.gruebling.navi.core.download.Downloads
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistSettings
@@ -35,6 +36,9 @@ data class SettingsUiState(
     val wifiQuality: QualityPresetUi = QualityPresetUi(QualityPreset.Original),
     val mobileQuality: QualityPresetUi = QualityPresetUi(QualityPreset.Original),
     val replayGainMode: ReplayGainMode = ReplayGainMode.Auto,
+    val downloadQuality: QualityPresetUi = QualityPresetUi(QualityPreset.Original),
+    val downloadOverMobileData: Boolean = false,
+    val downloadedBytes: Long = 0,
     val playlistGroups: ImmutableList<PlaylistGroupUi> = persistentListOf(),
 )
 
@@ -48,13 +52,15 @@ class SettingsViewModel @Inject constructor(
     private val streaming: StreamingSettingsStore,
     private val playlists: PlaylistRepository,
     private val signOut: SignOut,
+    private val downloads: Downloads,
 ) : ViewModel() {
     val state: StateFlow<SettingsUiState> = combine(
         session.state,
         streaming.settings,
         streaming.replayGainMode,
         playlists.observePlaylists(),
-    ) { s, quality, replayGain, list ->
+        combine(downloads.quality, downloads.allowMobileData, downloads.totalBytes, ::Triple),
+    ) { s, quality, replayGain, list, (downloadQuality, mobile, bytes) ->
         val loggedIn = s as? SessionState.LoggedIn
         SettingsUiState(
             serverUrl = loggedIn?.serverUrl,
@@ -62,6 +68,9 @@ class SettingsViewModel @Inject constructor(
             wifiQuality = QualityPresetUi(QualityPreset.of(quality.unmetered)),
             mobileQuality = QualityPresetUi(QualityPreset.of(quality.metered)),
             replayGainMode = replayGain,
+            downloadQuality = QualityPresetUi(QualityPreset.of(downloadQuality)),
+            downloadOverMobileData = mobile,
+            downloadedBytes = bytes,
             // Same order as on Home: group, pinned first, manual order.
             playlistGroups = list.groupBy { it.group }
                 .toSortedMap(compareBy { it.ordinal })
@@ -72,6 +81,18 @@ class SettingsViewModel @Inject constructor(
 
     internal fun setWifiQuality(preset: QualityPreset) = updateStreaming { it.copy(unmetered = preset.quality) }
     internal fun setMobileQuality(preset: QualityPreset) = updateStreaming { it.copy(metered = preset.quality) }
+
+    internal fun setDownloadQuality(preset: QualityPreset) {
+        viewModelScope.launch { downloads.setQuality(preset.quality) }
+    }
+
+    fun setDownloadOverMobileData(allow: Boolean) {
+        viewModelScope.launch { downloads.setAllowMobileData(allow) }
+    }
+
+    fun removeAllDownloads() {
+        viewModelScope.launch { downloads.removeAll() }
+    }
 
     fun setReplayGainMode(mode: ReplayGainMode) {
         viewModelScope.launch { streaming.setReplayGainMode(mode) }

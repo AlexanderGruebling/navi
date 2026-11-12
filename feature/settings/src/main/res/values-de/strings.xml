@@ -39,4 +39,12 @@
     <string name="cd_move_up">Nach oben</string>
     <string name="cd_move_down">Nach unten</string>
     <string name="cd_reorder">Ziehen zum Umsortieren</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_download_quality">Download-Qualität</string>
+    <string name="settings_download_mobile">Über mobile Daten laden</string>
+    <string name="settings_download_storage">Belegter Speicher</string>
+    <string name="settings_download_remove_all">Alle entfernen</string>
+    <string name="settings_download_remove_all_title">Alle Downloads entfernen?</string>
+    <string name="settings_download_remove_all_text">Alle heruntergeladenen Alben und Playlists werden von diesem Gerät gelöscht.</string>
+    <string name="settings_downloads_note">Die Qualität gilt für Titel, die ab jetzt geladen werden. Heruntergeladene Playlists bleiben mit dem Server abgeglichen.</string>
 </resources>

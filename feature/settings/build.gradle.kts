@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:download"))
     implementation(project(":core:data"))
     implementation(project(":core:datastore"))
     implementation(project(":core:playback"))

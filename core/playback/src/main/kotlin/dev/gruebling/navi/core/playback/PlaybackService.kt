@@ -36,6 +36,7 @@ class PlaybackService : MediaLibraryService() {
     @Inject lateinit var scrobbler: Scrobbler
     @Inject lateinit var mixExtender: MixExtender
     @Inject lateinit var replayGain: ReplayGainApplier
+    @Inject lateinit var offlineSkipper: OfflineSkipper
     @Inject lateinit var streamResolver: StreamResolver
 
     private val scope = MainScope()
@@ -61,6 +62,7 @@ class PlaybackService : MediaLibraryService() {
         scrobbler.attach(player, scope)
         mixExtender.attach(player, scope)
         replayGain.attach(player, scope)
+        offlineSkipper.attach(player)
 
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)

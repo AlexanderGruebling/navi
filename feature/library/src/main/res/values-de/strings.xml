@@ -15,4 +15,9 @@
         <item quantity="one">%d Album</item>
         <item quantity="other">%d Alben</item>
     </plurals>
+    <string name="library_tab_downloads">Downloads</string>
+    <string name="library_downloads_empty">Noch nichts heruntergeladen. Alben und Playlists haben neben Zufallswiedergabe einen Download-Knopf.</string>
+    <string name="library_downloads_summary">%1$d heruntergeladen · %2$s</string>
+    <string name="library_download_album">Album</string>
+    <string name="library_download_playlist">Playlist</string>
 </resources>

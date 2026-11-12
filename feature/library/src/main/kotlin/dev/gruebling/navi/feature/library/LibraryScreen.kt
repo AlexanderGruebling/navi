@@ -1,5 +1,9 @@
 package dev.gruebling.navi.feature.library
 
+import android.text.format.Formatter
+import dev.gruebling.navi.core.model.DownloadTarget
+import dev.gruebling.navi.core.ui.component.downloadStatusText
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -128,6 +132,7 @@ private fun LibraryContent(
     val albumsGrid = rememberLazyGridState()
     val artistsList = rememberLazyListState()
     val favoritesList = rememberLazyListState()
+    val downloadsList = rememberLazyListState()
 
     Column(modifier.fillMaxSize()) {
         ScreenTitle(stringResource(R.string.library_title))
@@ -166,7 +171,58 @@ private fun LibraryContent(
                 LibraryTab.Albums -> AlbumsTab(albums, state.albumSort, albumsGrid, onSortAlbums, onOpenAlbum)
                 LibraryTab.Artists -> ArtistsTab(state, artistsList, onOpenArtist)
                 LibraryTab.Favorites -> FavoritesTab(state, favoritesList, onPlayFavorites, onEnqueueFavorite, onOpenAlbum, onOpenArtist)
+                LibraryTab.Downloads -> DownloadsTab(state.downloads, downloadsList, onOpenAlbum, onOpenPlaylist)
             }
+        }
+    }
+}
+
+@Composable
+private fun DownloadsTab(
+    downloads: DownloadsUi,
+    listState: LazyListState,
+    onOpenAlbum: (String) -> Unit,
+    onOpenPlaylist: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+        if (downloads.rows.isEmpty()) {
+            item(key = "empty") {
+                Text(
+                    stringResource(R.string.library_downloads_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = NaviColors.TextSecondary,
+                    modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),
+                )
+            }
+            return@LazyColumn
+        }
+        item(key = "summary") {
+            MonoLabel(
+                stringResource(
+                    R.string.library_downloads_summary,
+                    downloads.rows.size,
+                    Formatter.formatShortFileSize(context, downloads.totalBytes),
+                ),
+                modifier = Modifier.padding(start = ScreenPadding, end = ScreenPadding, bottom = 8.dp),
+            )
+        }
+        items(downloads.rows, key = { it.target.key }, contentType = { "download" }) { row ->
+            val kind = stringResource(
+                if (row.target.kind == DownloadTarget.Kind.Album) R.string.library_download_album else R.string.library_download_playlist,
+            )
+            LibraryRow(
+                title = row.name ?: "…",
+                meta = listOfNotNull(
+                    kind,
+                    downloadStatusText(row.status, downloads.allowMobileData),
+                    Formatter.formatShortFileSize(context, row.sizeBytes).takeIf { row.sizeBytes > 0 },
+                ).joinToString(" · "),
+                coverArtId = row.coverArt,
+                onClick = {
+                    if (row.target.kind == DownloadTarget.Kind.Album) onOpenAlbum(row.target.id) else onOpenPlaylist(row.target.id)
+                },
+            )
         }
     }
 }
@@ -442,6 +498,7 @@ private val LibraryTab.label: Int
         LibraryTab.Albums -> R.string.library_tab_albums
         LibraryTab.Artists -> R.string.library_tab_artists
         LibraryTab.Favorites -> R.string.library_tab_favorites
+        LibraryTab.Downloads -> R.string.library_tab_downloads
     }
 
 private val AlbumSort.label: Int

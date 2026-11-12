@@ -1,5 +1,8 @@
 package dev.gruebling.navi.feature.settings
 
+import android.text.format.Formatter
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -76,13 +79,15 @@ fun SettingsScreen(
     SettingsContent(state, versionName, onBack, viewModel)
 }
 
-private enum class QualityDialog { Wifi, Mobile }
+private enum class QualityDialog { Wifi, Mobile, Download }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(state: SettingsUiState, versionName: String, onBack: () -> Unit, viewModel: SettingsViewModel) {
     var qualityDialog by rememberSaveable { mutableStateOf<QualityDialog?>(null) }
     var replayGainDialog by rememberSaveable { mutableStateOf(false) }
+    var confirmRemoveDownloads by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     var playlistDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmLogout by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -157,6 +162,41 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
             }
             item(key = "replay-gain-note") { Note(stringResource(R.string.settings_replay_gain_note)) }
 
+            // Downloads
+            item(key = "downloads-header") { Header(stringResource(R.string.settings_downloads)) }
+            item(key = "download-quality") {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_download_quality)) },
+                    supportingContent = { Text(stringResource(state.downloadQuality.preset.label)) },
+                    modifier = Modifier.clickable { qualityDialog = QualityDialog.Download },
+                )
+            }
+            item(key = "download-mobile") {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_download_mobile)) },
+                    trailingContent = { Switch(checked = state.downloadOverMobileData, onCheckedChange = null) },
+                    modifier = Modifier.toggleable(
+                        value = state.downloadOverMobileData,
+                        role = Role.Switch,
+                        onValueChange = viewModel::setDownloadOverMobileData,
+                    ),
+                )
+            }
+            item(key = "download-storage") {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_download_storage)) },
+                    supportingContent = { Text(Formatter.formatShortFileSize(context, state.downloadedBytes)) },
+                    trailingContent = {
+                        OutlinedButton(
+                            onClick = { confirmRemoveDownloads = true },
+                            enabled = state.downloadedBytes > 0,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        ) { Text(stringResource(R.string.settings_download_remove_all)) }
+                    },
+                )
+            }
+            item(key = "downloads-note") { Note(stringResource(R.string.settings_downloads_note)) }
+
             // Playlists on Home
             item(key = "playlists-header") { Header(stringResource(R.string.settings_playlists)) }
             item(key = "playlists-note") { Note(stringResource(R.string.settings_playlists_note)) }
@@ -227,13 +267,42 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
 
     qualityDialog?.let { which ->
         QualityChooser(
-            title = stringResource(if (which == QualityDialog.Wifi) R.string.settings_quality_wifi else R.string.settings_quality_mobile),
-            selected = if (which == QualityDialog.Wifi) state.wifiQuality.preset else state.mobileQuality.preset,
+            title = stringResource(
+                when (which) {
+                    QualityDialog.Wifi -> R.string.settings_quality_wifi
+                    QualityDialog.Mobile -> R.string.settings_quality_mobile
+                    QualityDialog.Download -> R.string.settings_download_quality
+                },
+            ),
+            selected = when (which) {
+                QualityDialog.Wifi -> state.wifiQuality.preset
+                QualityDialog.Mobile -> state.mobileQuality.preset
+                QualityDialog.Download -> state.downloadQuality.preset
+            },
             onSelect = {
-                if (which == QualityDialog.Wifi) viewModel.setWifiQuality(it) else viewModel.setMobileQuality(it)
+                when (which) {
+                    QualityDialog.Wifi -> viewModel.setWifiQuality(it)
+                    QualityDialog.Mobile -> viewModel.setMobileQuality(it)
+                    QualityDialog.Download -> viewModel.setDownloadQuality(it)
+                }
                 qualityDialog = null
             },
             onDismiss = { qualityDialog = null },
+        )
+    }
+
+    if (confirmRemoveDownloads) {
+        AlertDialog(
+            onDismissRequest = { confirmRemoveDownloads = false },
+            title = { Text(stringResource(R.string.settings_download_remove_all_title)) },
+            text = { Text(stringResource(R.string.settings_download_remove_all_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemoveDownloads = false
+                    viewModel.removeAllDownloads()
+                }) { Text(stringResource(R.string.settings_download_remove_all)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemoveDownloads = false }) { Text(stringResource(R.string.settings_cancel)) } },
         )
     }
 

@@ -19,6 +19,8 @@ fun PlaylistScreen(playlistId: String, onBack: () -> Unit) {
         onPlay = viewModel::play,
         onShuffle = viewModel::shuffle,
         onEnqueue = viewModel::enqueue,
+        onDownload = viewModel::download,
+        onRemoveDownload = viewModel::removeDownload,
         onShowNewer = viewModel::showNewerContent,
         onUserInteraction = viewModel::onUserInteraction,
     )
@@ -37,5 +39,7 @@ fun AlbumScreen(albumId: String, onBack: () -> Unit) {
         onPlay = viewModel::play,
         onShuffle = viewModel::shuffle,
         onEnqueue = viewModel::enqueue,
+        onDownload = viewModel::download,
+        onRemoveDownload = viewModel::removeDownload,
     )
 }

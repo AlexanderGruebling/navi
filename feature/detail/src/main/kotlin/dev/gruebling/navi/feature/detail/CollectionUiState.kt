@@ -1,6 +1,7 @@
 package dev.gruebling.navi.feature.detail
 
 import androidx.compose.runtime.Immutable
+import dev.gruebling.navi.core.model.DownloadStatus
 import dev.gruebling.navi.core.model.Song
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -39,7 +40,11 @@ data class CollectionUiState(
     /** Smart playlist re-evaluated on the server while the user was looking at the old mix. */
     val hasNewerContent: Boolean = false,
     val isLoading: Boolean = true,
+    val download: DownloadUi = DownloadUi(),
 )
+
+@Immutable
+data class DownloadUi(val status: DownloadStatus = DownloadStatus.None, val allowMobileData: Boolean = false)
 
 internal fun List<Song>.toTrackUi(showCovers: Boolean): ImmutableList<TrackUi> =
     mapIndexed { index, song ->

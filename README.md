@@ -26,9 +26,13 @@ network is slow, and streams in a sensible quality on mobile data.
   neighbouring songs are from the same album). It only turns songs down; untagged songs play at full volume.
 - **Instant mix**: a radio from an artist (artist page) or from the playing song (full player), built from the
   server's similar songs. Near the end of the queue it adds more songs similar to the one playing.
+- **Offline downloads** of albums and playlists (download button next to shuffle, list in Library → Downloads).
+  Downloaded playlists stay in sync with the server: new songs are fetched, dropped ones deleted. Own quality
+  preset, Wi-Fi only unless allowed otherwise, resumes after interruptions. Downloaded songs play without network;
+  songs that aren't downloaded are then skipped.
 - **Scrobbling** to the server the way Last.fm counts plays: "now playing" on start, a play after half the track
   or 4 minutes of actual listening.
-- **Settings**: quality presets, volume levelling, per-playlist group override, pinning and ordering, logout.
+- **Settings**: quality presets, volume levelling, downloads, per-playlist group override, pinning and ordering, logout.
 
 UI strings are in English and German.
 
@@ -132,3 +136,5 @@ on-device trace processor can't name the RenderThread when the app started befor
 - Release signing key.
 - Gapless playback not yet verified with a gapless album.
 - Restoring the position of a transcoded track when the queue is restored.
+- Offline mode beyond downloads: covers only show if the image cache still has them. Downloaded playlists are
+  synced when the app starts, not periodically in the background.

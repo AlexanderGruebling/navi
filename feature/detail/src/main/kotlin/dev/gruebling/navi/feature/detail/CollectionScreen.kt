@@ -37,7 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.gruebling.navi.core.model.DownloadStatus
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
+import dev.gruebling.navi.core.ui.component.DownloadButton
+import dev.gruebling.navi.core.ui.component.MonoLabel
+import dev.gruebling.navi.core.ui.component.RemoveDownloadDialog
+import dev.gruebling.navi.core.ui.component.downloadStatusText
 import dev.gruebling.navi.core.ui.component.NaviChip
 import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.StatusLabel
@@ -63,11 +68,14 @@ internal fun CollectionScreen(
     onPlay: (index: Int) -> Unit,
     onShuffle: () -> Unit,
     onEnqueue: (index: Int, EnqueuePosition) -> Unit,
+    onDownload: () -> Unit,
+    onRemoveDownload: () -> Unit,
     onShowNewer: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     var actionsFor by remember { mutableStateOf<Int?>(null) }
+    var confirmRemove by remember { mutableStateOf(false) }
     val headerGone by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val barAlpha by animateFloatAsState(if (headerGone) 1f else 0f, label = "barAlpha")
 
@@ -78,7 +86,12 @@ internal fun CollectionScreen(
     Box(Modifier.fillMaxSize()) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
             item(key = "header", contentType = "header") {
-                Header(state, onPlay = { onPlay(0) }, onShuffle = onShuffle)
+                Header(
+                    state,
+                    onPlay = { onPlay(0) },
+                    onShuffle = onShuffle,
+                    onDownload = { if (state.download.status == DownloadStatus.None) onDownload() else confirmRemove = true },
+                )
             }
             if (state.hasNewerContent) {
                 item(key = "newer", contentType = "chip") {
@@ -131,6 +144,15 @@ internal fun CollectionScreen(
                 )
             }
         }
+        if (confirmRemove) {
+            RemoveDownloadDialog(
+                onConfirm = {
+                    confirmRemove = false
+                    onRemoveDownload()
+                },
+                onDismiss = { confirmRemove = false },
+            )
+        }
         DetailTopBar(
             label = kindLabel,
             title = state.header?.title.orEmpty(),
@@ -141,7 +163,7 @@ internal fun CollectionScreen(
 }
 
 @Composable
-private fun Header(state: CollectionUiState, onPlay: () -> Unit, onShuffle: () -> Unit) {
+private fun Header(state: CollectionUiState, onPlay: () -> Unit, onShuffle: () -> Unit, onDownload: () -> Unit) {
     val header = state.header
     Column(
         Modifier
@@ -192,7 +214,16 @@ private fun Header(state: CollectionUiState, onPlay: () -> Unit, onShuffle: () -
                     tint = NaviColors.TextSecondary,
                 )
             }
-            Spacer(Modifier.weight(1f))
+            DownloadButton(
+                status = state.download.status,
+                onClick = onDownload,
+                enabled = state.tracks.isNotEmpty() || state.download.status != DownloadStatus.None,
+                modifier = Modifier.offset(x = (-12).dp),
+            )
+            // Takes the free space, so a long status ellipsizes instead of pushing the play button.
+            Box(Modifier.weight(1f).offset(x = (-12).dp).padding(end = 8.dp)) {
+                downloadStatusText(state.download.status, state.download.allowMobileData)?.let { MonoLabel(it) }
+            }
             AccentPlayButton(onClick = onPlay, enabled = state.tracks.isNotEmpty())
         }
     }

@@ -39,4 +39,12 @@
     <string name="cd_move_up">Move up</string>
     <string name="cd_move_down">Move down</string>
     <string name="cd_reorder">Drag to reorder</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_download_quality">Download quality</string>
+    <string name="settings_download_mobile">Download over mobile data</string>
+    <string name="settings_download_storage">Storage used</string>
+    <string name="settings_download_remove_all">Remove all</string>
+    <string name="settings_download_remove_all_title">Remove all downloads?</string>
+    <string name="settings_download_remove_all_text">All downloaded albums and playlists are deleted from this device.</string>
+    <string name="settings_downloads_note">The quality applies to songs downloaded from now on. Downloaded playlists stay in sync with the server.</string>
 </resources>

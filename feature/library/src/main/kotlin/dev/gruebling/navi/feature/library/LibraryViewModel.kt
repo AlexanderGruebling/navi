@@ -12,7 +12,10 @@ import dev.gruebling.navi.core.data.repository.AlbumSort
 import dev.gruebling.navi.core.data.repository.ArtistRepository
 import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
+import dev.gruebling.navi.core.download.Downloads
 import dev.gruebling.navi.core.model.Album
+import dev.gruebling.navi.core.model.DownloadStatus
+import dev.gruebling.navi.core.model.DownloadTarget
 import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.Song
@@ -36,7 +39,24 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import dev.gruebling.navi.core.model.EnqueuePosition
 
-enum class LibraryTab { Playlists, Albums, Artists, Favorites }
+enum class LibraryTab { Playlists, Albums, Artists, Favorites, Downloads }
+
+/** One downloaded album or playlist. */
+@Immutable
+data class DownloadRow(
+    val target: DownloadTarget,
+    val name: String?,
+    val coverArt: String?,
+    val status: DownloadStatus,
+    val sizeBytes: Long,
+)
+
+@Immutable
+data class DownloadsUi(
+    val rows: ImmutableList<DownloadRow> = persistentListOf(),
+    val totalBytes: Long = 0,
+    val allowMobileData: Boolean = false,
+)
 
 @Immutable
 data class ArtistLetterGroup(val letter: String, val artists: ImmutableList<Artist>)
@@ -53,6 +73,7 @@ data class LibraryUiState(
     val currentSongId: String? = null,
     val isRefreshing: Boolean = false,
     val refreshFailed: Boolean = false,
+    val downloads: DownloadsUi = DownloadsUi(),
 )
 
 @HiltViewModel
@@ -63,6 +84,7 @@ class LibraryViewModel @Inject constructor(
     private val artistRepository: ArtistRepository,
     private val favoritesRepository: FavoritesRepository,
     private val playback: PlaybackController,
+    downloads: Downloads,
 ) : ViewModel() {
     private val tab = savedState.getStateFlow(KEY_TAB, LibraryTab.Playlists)
     private val albumSort = savedState.getStateFlow(KEY_SORT, AlbumSort.RecentlyAdded)
@@ -78,13 +100,21 @@ class LibraryViewModel @Inject constructor(
         favoritesRepository.observeFavorites(),
     ) { playlists, artistGroups, favorites -> Triple(playlists, artistGroups, favorites) }
 
+    private val downloadsUi = combine(downloads.collections, downloads.totalBytes, downloads.allowMobileData) { list, total, mobile ->
+        DownloadsUi(
+            rows = list.map { DownloadRow(it.target, it.info?.name, it.info?.coverArt, it.status, it.sizeBytes) }.toImmutableList(),
+            totalBytes = total,
+            allowMobileData = mobile,
+        )
+    }
+
     val state: StateFlow<LibraryUiState> = combine(
         combine(tab, albumSort, ::Pair),
         content,
         playback.state.map { it.current?.songId }.distinctUntilChanged(),
-        refreshing,
-        refreshFailed,
-    ) { (tab, sort), (playlists, artistGroups, favorites), currentSongId, isRefreshing, failed ->
+        combine(refreshing, refreshFailed, ::Pair),
+        downloadsUi,
+    ) { (tab, sort), (playlists, artistGroups, favorites), currentSongId, (isRefreshing, failed), downloads ->
         LibraryUiState(
             tab = tab,
             albumSort = sort,
@@ -96,6 +126,7 @@ class LibraryViewModel @Inject constructor(
             currentSongId = currentSongId,
             isRefreshing = isRefreshing,
             refreshFailed = failed,
+            downloads = downloads,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState(tab = tab.value, albumSort = albumSort.value))
 

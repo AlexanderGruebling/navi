@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
     implementation(project(":core:playback"))
+    implementation(project(":core:download"))
     implementation(project(":feature:login"))
     implementation(project(":feature:home"))
     implementation(project(":feature:search"))
@@ -66,4 +67,5 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.androidx.hilt.work)
 }
