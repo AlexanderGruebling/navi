@@ -56,7 +56,7 @@ class PlaylistRepositoryTest {
             ok(""""playlist":${playlistJson(id).dropLast(1)},"entry":[$entries]}""")
         }
         db = inMemoryDatabase()
-        repo = PlaylistRepository(server.api, db.playlistDao(), db.songDao())
+        repo = PlaylistRepository(server.api, db.playlistDao(), db.songDao(), db)
     }
 
     @After

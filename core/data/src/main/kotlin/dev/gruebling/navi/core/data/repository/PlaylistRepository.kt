@@ -1,9 +1,11 @@
 package dev.gruebling.navi.core.data.repository
 
+import androidx.room.withTransaction
 import dev.gruebling.navi.core.data.mapping.toDomain
 import dev.gruebling.navi.core.data.mapping.toEntity
 import dev.gruebling.navi.core.data.mapping.toInstant
 import dev.gruebling.navi.core.data.util.suspendRunCatching
+import dev.gruebling.navi.core.database.NaviDatabase
 import dev.gruebling.navi.core.database.dao.PlaylistDao
 import dev.gruebling.navi.core.database.dao.SongDao
 import dev.gruebling.navi.core.database.entity.PlaylistPrefsEntity
@@ -37,6 +39,7 @@ class PlaylistRepository @Inject constructor(
     private val api: SubsonicApi,
     private val playlistDao: PlaylistDao,
     private val songDao: SongDao,
+    private val db: NaviDatabase,
 ) {
     private val grouping = PlaylistGrouping()
 
@@ -88,14 +91,17 @@ class PlaylistRepository @Inject constructor(
         val remote = api.getPlaylist(id.value).ok().playlist ?: error("Playlist ${id.value} missing in response")
         val songIds = remote.entry.map { it.id }
         val signature = PlaylistGrouping.signature(songIds)
-        songDao.upsert(remote.entry.map { it.toEntity() })
-        val position = playlistDao.get(id.value)?.position ?: Int.MAX_VALUE
-        playlistDao.upsert(listOf(remote.toEntity(position, signature)))
-        playlistDao.replaceSongs(id.value, songIds, signature)
-        // First time we see this playlist's content: that is the baseline, not "new".
-        val prefs = playlistDao.prefs(id.value)
-        if (prefs?.seenSignature == null) {
-            playlistDao.upsertPrefs((prefs ?: PlaylistPrefsEntity(id.value)).copy(seenSignature = signature))
+        // One transaction: observers (home, the playlist screen) see one change instead of five.
+        db.withTransaction {
+            songDao.upsert(remote.entry.map { it.toEntity() })
+            val position = playlistDao.get(id.value)?.position ?: Int.MAX_VALUE
+            playlistDao.upsert(listOf(remote.toEntity(position, signature)))
+            playlistDao.replaceSongs(id.value, songIds, signature)
+            // First time we see this playlist's content: that is the baseline, not "new".
+            val prefs = playlistDao.prefs(id.value)
+            if (prefs?.seenSignature == null) {
+                playlistDao.upsertPrefs((prefs ?: PlaylistPrefsEntity(id.value)).copy(seenSignature = signature))
+            }
         }
     }
 
