@@ -4,6 +4,7 @@ import dev.gruebling.navi.core.data.di.ApplicationScope
 import dev.gruebling.navi.core.datastore.CredentialStore
 import dev.gruebling.navi.core.model.ServerCredentials
 import dev.gruebling.navi.core.network.CredentialsSource
+import dev.gruebling.navi.core.network.HttpsDowngradeException
 import dev.gruebling.navi.core.network.SubsonicApi
 import dev.gruebling.navi.core.network.SubsonicException
 import java.io.IOException
@@ -79,6 +80,9 @@ class SessionManager @Inject constructor(
         } catch (e: UnknownHostException) {
             LoginResult.UnknownHost
         } catch (e: SSLException) {
+            LoginResult.TlsError
+        } catch (e: HttpsDowngradeException) {
+            // An https address that sends us to plain http: as unsafe as a broken certificate.
             LoginResult.TlsError
         } catch (e: IOException) {
             LoginResult.Unreachable

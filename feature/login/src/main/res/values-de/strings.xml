@@ -14,7 +14,7 @@
     <string name="login_error_credentials">Benutzername oder Passwort falsch.</string>
     <string name="login_error_unknown_host">Server nicht gefunden. Prüfe die Adresse oder ob du im richtigen Netz bzw. VPN bist.</string>
     <string name="login_error_unreachable">Der Server antwortet nicht.</string>
-    <string name="login_error_tls">Sichere Verbindung fehlgeschlagen (Zertifikatsproblem).</string>
+    <string name="login_error_tls">Sichere Verbindung fehlgeschlagen (Zertifikatsproblem oder Umleitung auf http).</string>
     <string name="login_error_not_subsonic">Unter der Adresse antwortet etwas, aber kein Subsonic-Server. Prüfe den Pfad.</string>
     <string name="login_error_server">Serverfehler: %1$s</string>
 </resources>
