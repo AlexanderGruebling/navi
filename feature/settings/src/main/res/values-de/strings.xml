@@ -32,4 +32,5 @@
     <string name="settings_version">Version %1$s</string>
     <string name="cd_move_up">Nach oben</string>
     <string name="cd_move_down">Nach unten</string>
+    <string name="cd_reorder">Ziehen zum Umsortieren</string>
 </resources>

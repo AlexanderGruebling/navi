@@ -96,6 +96,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { playlists.reorder(reordered.map { it.id }) }
     }
 
+    /** Saves a dragged order: [ordered] is one group's playlists as they now appear. */
+    fun reorder(ordered: List<Playlist>) {
+        viewModelScope.launch { playlists.reorder(ordered.map { it.id }) }
+    }
+
     fun logout() {
         signOut()
     }
