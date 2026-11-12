@@ -6,15 +6,20 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
+import dev.gruebling.navi.core.data.session.AccountCache
+import dev.gruebling.navi.core.playback.AudioCacheCleaner
 import dev.gruebling.navi.core.playback.StreamResolver
 import java.io.File
 import javax.inject.Qualifier
@@ -57,4 +62,13 @@ object PlaybackModule {
     @ArtworkDataSource
     fun artworkDataSourceFactory(client: OkHttpClient, resolver: StreamResolver): DataSource.Factory =
         ResolvingDataSource.Factory(OkHttpDataSource.Factory(client), resolver)
+}
+
+@OptIn(UnstableApi::class)
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class PlaybackBindings {
+    @Binds abstract fun cache(impl: SimpleCache): Cache
+
+    @Binds @IntoSet abstract fun audioCacheCleaner(impl: AudioCacheCleaner): AccountCache
 }

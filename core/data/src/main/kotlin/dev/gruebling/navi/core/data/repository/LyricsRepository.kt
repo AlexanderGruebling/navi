@@ -3,6 +3,7 @@ package dev.gruebling.navi.core.data.repository
 import dev.gruebling.navi.core.data.mapping.parsePlainLyrics
 import dev.gruebling.navi.core.data.mapping.pickBest
 import dev.gruebling.navi.core.data.mapping.toLyrics
+import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.data.util.suspendRunCatching
 import dev.gruebling.navi.core.model.Lyrics
 import dev.gruebling.navi.core.model.SongId
@@ -23,7 +24,7 @@ import kotlinx.coroutines.sync.withLock
  * back to the classic `getLyrics` by artist and title. Network failures are not cached, so the next try can succeed.
  */
 @Singleton
-class LyricsRepository @Inject constructor(private val api: SubsonicApi) {
+class LyricsRepository @Inject constructor(private val api: SubsonicApi) : AccountCache {
     private val lock = Mutex()
     private val cache = object : LinkedHashMap<String, Lyrics?>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Lyrics?>) = size > CACHE_SIZE
@@ -36,6 +37,8 @@ class LyricsRepository @Inject constructor(private val api: SubsonicApi) {
         result.onSuccess { lyrics -> lock.withLock { cache[id.value] = lyrics } }
         return result
     }
+
+    override suspend fun clear() = lock.withLock { cache.clear() }
 
     private suspend fun fetch(id: SongId, artist: String?, title: String?): Result<Lyrics?> {
         val structured = suspendRunCatching { api.getLyricsBySongId(id.value).ok().lyricsList }
