@@ -7,6 +7,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.model.PlaylistDetail
 import dev.gruebling.navi.core.model.PlaylistId
 import dev.gruebling.navi.core.model.Song
@@ -109,5 +110,10 @@ class PlaylistViewModel @AssistedInject constructor(
         interacted = true
         val songs = shown.value.orEmpty()
         if (songs.isNotEmpty()) playback.playSongs(songs, shuffle = true)
+    }
+
+    fun enqueue(index: Int, position: EnqueuePosition) {
+        interacted = true
+        shown.value?.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
     }
 }

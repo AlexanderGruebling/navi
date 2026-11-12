@@ -13,6 +13,7 @@ import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.model.Album
 import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.model.ArtistId
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.playback.InstantMix
 import dev.gruebling.navi.core.playback.PlaybackController
 import kotlinx.collections.immutable.ImmutableList
@@ -138,6 +139,12 @@ class ArtistViewModel @AssistedInject constructor(
             } finally {
                 startingMix.value = false
             }
+        }
+    }
+
+    fun enqueueTopSong(index: Int, position: EnqueuePosition) {
+        viewModelScope.launch {
+            info.first().topSongs.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
         }
     }
 

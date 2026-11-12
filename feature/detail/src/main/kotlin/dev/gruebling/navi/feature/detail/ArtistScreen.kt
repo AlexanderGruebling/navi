@@ -55,11 +55,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.model.Artist
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
 import dev.gruebling.navi.core.ui.component.CoverTile
 import dev.gruebling.navi.core.ui.component.MessageToasts
 import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.ScreenPadding
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
 import dev.gruebling.navi.core.ui.component.StatusLabel
 import dev.gruebling.navi.core.ui.component.TrackRow
 import dev.gruebling.navi.core.ui.component.TrackRowInset
@@ -90,6 +92,7 @@ fun ArtistScreen(
         onStartMix = viewModel::startMix,
         onToggleStar = viewModel::toggleStar,
         onPlayTopSong = viewModel::playTopSong,
+        onEnqueueTopSong = viewModel::enqueueTopSong,
     )
 }
 
@@ -108,6 +111,7 @@ private fun ArtistContent(
     onStartMix: () -> Unit,
     onToggleStar: () -> Unit,
     onPlayTopSong: (Int) -> Unit,
+    onEnqueueTopSong: (Int, EnqueuePosition) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
     val headerGone by remember { derivedStateOf { gridState.firstVisibleItemIndex > 0 } }
@@ -182,7 +186,7 @@ private fun ArtistContent(
             }
             if (state.topSongs.isNotEmpty()) {
                 item(key = "top", span = { GridItemSpan(maxLineSpan) }, contentType = "top") {
-                    TopSongs(state.topSongs, state.currentSongId, onPlayTopSong)
+                    TopSongs(state.topSongs, state.currentSongId, onPlayTopSong, onEnqueueTopSong)
                 }
             }
             if (state.albums.isNotEmpty()) {
@@ -238,8 +242,14 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 
 /** One grid item for all rows: the grid's 16 dp item spacing would pull track rows apart. */
 @Composable
-private fun TopSongs(songs: ImmutableList<TrackUi>, currentSongId: String?, onPlay: (Int) -> Unit) {
+private fun TopSongs(
+    songs: ImmutableList<TrackUi>,
+    currentSongId: String?,
+    onPlay: (Int) -> Unit,
+    onEnqueue: (Int, EnqueuePosition) -> Unit,
+) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
     val shown = if (expanded) songs.size else minOf(songs.size, TopSongsCollapsed)
     Column(Modifier.fillMaxWidth()) {
         SectionLabel(stringResource(R.string.detail_section_top_songs), Modifier.padding(bottom = 8.dp))
@@ -256,6 +266,7 @@ private fun TopSongs(songs: ImmutableList<TrackUi>, currentSongId: String?, onPl
                     isCurrent = track.songId == currentSongId,
                     isStarred = track.starred,
                     onClick = { onPlay(index) },
+                    onLongClick = { actionsFor = index },
                 )
             }
         }
@@ -267,6 +278,17 @@ private fun TopSongs(songs: ImmutableList<TrackUi>, currentSongId: String?, onPl
                     .clip(MaterialTheme.shapes.small)
                     .clickable { expanded = !expanded }
                     .padding(vertical = 12.dp),
+            )
+        }
+    }
+    actionsFor?.let { index ->
+        songs.getOrNull(index)?.let { track ->
+            SongActionsSheet(
+                title = track.title,
+                subtitle = track.subtitle,
+                coverArtId = track.coverArtId,
+                onEnqueue = { position -> onEnqueue(index, position) },
+                onDismiss = { actionsFor = null },
             )
         }
     }

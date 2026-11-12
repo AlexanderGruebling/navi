@@ -63,6 +63,15 @@ data class ArtistInfo(
     }
 }
 
+/** Where songs go when added to the queue without replacing it. */
+enum class EnqueuePosition {
+    /** Right after the playing song. */
+    Next,
+
+    /** At the end of the queue. */
+    End,
+}
+
 /** Server-side album lists used on Home. */
 enum class AlbumListType(val apiValue: String) {
     RecentlyPlayed("recent"),

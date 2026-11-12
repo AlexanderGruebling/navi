@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import dev.gruebling.navi.core.model.EnqueuePosition
 
 @Immutable
 data class SearchUiState(
@@ -91,6 +92,10 @@ class SearchViewModel @Inject constructor(
     }
 
     /** Plays the song results as a queue, starting at the tapped one. */
+    fun enqueueSong(index: Int, position: EnqueuePosition) {
+        state.value.songs.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
+    }
+
     fun playSong(index: Int) {
         val songs = state.value.songs
         if (index in songs.indices) playback.playSongs(songs, startIndex = index)

@@ -28,6 +28,16 @@ interface SubsonicApi {
     @GET("rest/getPlaylist")
     suspend fun getPlaylist(@Query("id") id: String): SubsonicEnvelope
 
+    /** Creates a playlist owned by the user. Since Subsonic 1.14 the answer contains the new playlist. */
+    @GET("rest/createPlaylist")
+    suspend fun createPlaylist(@Query("name") name: String, @Query("songId") songIds: List<String>): SubsonicEnvelope
+
+    @GET("rest/updatePlaylist")
+    suspend fun updatePlaylist(
+        @Query("playlistId") playlistId: String,
+        @Query("songIdToAdd") songIdsToAdd: List<String> = emptyList(),
+    ): SubsonicEnvelope
+
     /** [type]: newest, recent, frequent, random, alphabeticalByName, alphabeticalByArtist, starred, highest. */
     @GET("rest/getAlbumList2")
     suspend fun getAlbumList2(

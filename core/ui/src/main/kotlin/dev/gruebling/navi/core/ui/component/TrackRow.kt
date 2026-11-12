@@ -1,7 +1,7 @@
 package dev.gruebling.navi.core.ui.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +49,8 @@ fun TrackRow(
     trackNumber: Int? = null,
     isCurrent: Boolean = false,
     isStarred: Boolean = false,
+    /** Long press, usually [SongActionsSheet]. */
+    onLongClick: (() -> Unit)? = null,
 ) {
     val nowPlaying = stringResource(R.string.cd_now_playing)
     Row(
@@ -57,7 +59,11 @@ fun TrackRow(
             .height(60.dp)
             .clip(MaterialTheme.shapes.small)
             .then(if (isCurrent) Modifier.background(NaviColors.Surface1) else Modifier)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+                onLongClickLabel = if (onLongClick != null) stringResource(R.string.cd_song_actions) else null,
+            )
             .then(if (isCurrent) Modifier.semantics { contentDescription = nowPlaying } else Modifier)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

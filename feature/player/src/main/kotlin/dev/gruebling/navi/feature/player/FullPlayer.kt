@@ -332,10 +332,14 @@ private fun FullPlayer(
     }
 
     if (showQueue) {
+        val isSavingQueue by viewModel.isSavingQueue.collectAsStateWithLifecycle()
         QueueSheet(
             state = state,
+            isSaving = isSavingQueue,
             onSkipTo = viewModel::skipTo,
             onRemove = viewModel::remove,
+            onMove = viewModel::move,
+            onSave = viewModel::saveQueueAsPlaylist,
             onDismiss = { showQueue = false },
         )
     }

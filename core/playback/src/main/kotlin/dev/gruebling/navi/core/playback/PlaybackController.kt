@@ -9,6 +9,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.gruebling.navi.core.data.di.ApplicationScope
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.model.Song
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.QueueEntry
@@ -113,6 +114,11 @@ class PlaybackController @Inject constructor(
         if (current > 0) removeMediaItems(0, current)
         if (playbackState == Player.STATE_IDLE) prepare()
         play()
+    }
+
+    fun enqueue(songs: List<Song>, position: EnqueuePosition) = when (position) {
+        EnqueuePosition.Next -> playNext(songs)
+        EnqueuePosition.End -> addToQueue(songs)
     }
 
     /** Inserts right after the current track. */

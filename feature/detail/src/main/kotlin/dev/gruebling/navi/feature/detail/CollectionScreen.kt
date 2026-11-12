@@ -24,6 +24,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -39,6 +41,8 @@ import dev.gruebling.navi.core.ui.component.AccentPlayButton
 import dev.gruebling.navi.core.ui.component.NaviChip
 import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.StatusLabel
+import dev.gruebling.navi.core.model.EnqueuePosition
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
 import dev.gruebling.navi.core.ui.component.TrackRow
 import dev.gruebling.navi.core.ui.component.TrackRowInset
 import dev.gruebling.navi.core.ui.component.collectionSummary
@@ -58,10 +62,12 @@ internal fun CollectionScreen(
     onBack: () -> Unit,
     onPlay: (index: Int) -> Unit,
     onShuffle: () -> Unit,
+    onEnqueue: (index: Int, EnqueuePosition) -> Unit,
     onShowNewer: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
     val headerGone by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val barAlpha by animateFloatAsState(if (headerGone) 1f else 0f, label = "barAlpha")
 
@@ -109,6 +115,19 @@ internal fun CollectionScreen(
                     isCurrent = track.songId == state.currentSongId,
                     isStarred = track.starred,
                     onClick = { onPlay(index) },
+                    onLongClick = { actionsFor = index },
+                )
+            }
+        }
+        actionsFor?.let { index ->
+            state.tracks.getOrNull(index)?.let { track ->
+                SongActionsSheet(
+                    title = track.title,
+                    subtitle = track.subtitle,
+                    // Album tracks have no own cover in the list; the album's is the same.
+                    coverArtId = track.coverArtId ?: state.header?.coverArtId,
+                    onEnqueue = { position -> onEnqueue(index, position) },
+                    onDismiss = { actionsFor = null },
                 )
             }
         }

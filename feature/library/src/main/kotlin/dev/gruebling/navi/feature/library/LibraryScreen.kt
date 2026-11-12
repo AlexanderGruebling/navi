@@ -80,6 +80,8 @@ import dev.gruebling.navi.core.ui.theme.NaviColors
 import dev.gruebling.navi.core.ui.theme.NaviType
 import kotlinx.collections.immutable.ImmutableList
 import dev.gruebling.navi.core.ui.R as UiR
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
+import dev.gruebling.navi.core.model.EnqueuePosition
 
 @Composable
 fun LibraryScreen(
@@ -98,6 +100,7 @@ fun LibraryScreen(
         onSortAlbums = viewModel::setAlbumSort,
         onRefresh = viewModel::refresh,
         onPlayFavorites = viewModel::playFavorites,
+        onEnqueueFavorite = viewModel::enqueueFavorite,
         onOpenPlaylist = onOpenPlaylist,
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
@@ -114,6 +117,7 @@ private fun LibraryContent(
     onSortAlbums: (AlbumSort) -> Unit,
     onRefresh: () -> Unit,
     onPlayFavorites: (startIndex: Int, shuffle: Boolean) -> Unit,
+    onEnqueueFavorite: (Int, EnqueuePosition) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
@@ -161,7 +165,7 @@ private fun LibraryContent(
                 LibraryTab.Playlists -> PlaylistsTab(state.playlists, playlistsList, onOpenPlaylist)
                 LibraryTab.Albums -> AlbumsTab(albums, state.albumSort, albumsGrid, onSortAlbums, onOpenAlbum)
                 LibraryTab.Artists -> ArtistsTab(state, artistsList, onOpenArtist)
-                LibraryTab.Favorites -> FavoritesTab(state, favoritesList, onPlayFavorites, onOpenAlbum, onOpenArtist)
+                LibraryTab.Favorites -> FavoritesTab(state, favoritesList, onPlayFavorites, onEnqueueFavorite, onOpenAlbum, onOpenArtist)
             }
         }
     }
@@ -342,9 +346,11 @@ private fun FavoritesTab(
     state: LibraryUiState,
     listState: LazyListState,
     onPlay: (startIndex: Int, shuffle: Boolean) -> Unit,
+    onEnqueue: (Int, EnqueuePosition) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
 ) {
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
     val empty = state.favoriteSongs.isEmpty() && state.favoriteAlbums.isEmpty() && state.favoriteArtists.isEmpty()
     if (empty && !state.isRefreshing) {
         Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.TopCenter) {
@@ -412,8 +418,20 @@ private fun FavoritesTab(
                     coverArtId = song.coverArt?.value,
                     isCurrent = song.id.value == state.currentSongId,
                     onClick = { onPlay(index, false) },
+                    onLongClick = { actionsFor = index },
                 )
             }
+        }
+    }
+    actionsFor?.let { index ->
+        state.favoriteSongs.getOrNull(index)?.let { song ->
+            SongActionsSheet(
+                title = song.title,
+                subtitle = song.artist,
+                coverArtId = song.coverArt?.value,
+                onEnqueue = { position -> onEnqueue(index, position) },
+                onDismiss = { actionsFor = null },
+            )
         }
     }
 }

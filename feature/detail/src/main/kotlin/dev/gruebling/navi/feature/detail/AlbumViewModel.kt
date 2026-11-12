@@ -8,6 +8,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.AlbumRepository
 import dev.gruebling.navi.core.model.AlbumId
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.playback.PlaybackController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -72,6 +73,12 @@ class AlbumViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val songs = detail.first()?.songs.orEmpty()
             if (songs.isNotEmpty()) playback.playSongs(songs, shuffle = true)
+        }
+    }
+
+    fun enqueue(index: Int, position: EnqueuePosition) {
+        viewModelScope.launch {
+            detail.first()?.songs?.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
         }
     }
 }

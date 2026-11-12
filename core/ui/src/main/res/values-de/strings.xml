@@ -22,4 +22,9 @@
     <string name="cd_instant_mix">Mix starten</string>
     <string name="mix_unavailable">Kein Mix verfügbar: Der Server kennt dazu keine ähnlichen Songs.</string>
     <string name="mix_failed">Mix konnte nicht geladen werden. Prüfe die Verbindung und versuch es noch einmal.</string>
+    <string name="cd_song_actions">Weitere Optionen</string>
+    <string name="song_play_next">Als Nächstes spielen</string>
+    <string name="song_add_to_queue">Zur Warteschlange hinzufügen</string>
+    <string name="song_queued_next">Wird als Nächstes gespielt</string>
+    <string name="song_queued_end">Zur Warteschlange hinzugefügt</string>
 </resources>

@@ -187,4 +187,21 @@ class PlaylistRepositoryTest {
         assertTrue(repo.refreshPlaylists().isFailure)
         assertEquals(3, repo.observePlaylists().first().size)
     }
+
+    @Test
+    fun `saving a long queue as a playlist sends the songs in order, in chunks`() = runTest {
+        server.on("createPlaylist") { ok(""""playlist":{"id":"new","name":"${it.queryParameter("name")}","songCount":0}""") }
+        server.on("updatePlaylist", ok())
+        val ids = (1..250).map { "q$it" }
+
+        assertEquals("new", repo.createPlaylist("My mix", ids).getOrThrow().value)
+
+        val create = server.requestsTo("createPlaylist").single()
+        assertEquals("My mix", create.queryParameter("name"))
+        val updates = server.requestsTo("updatePlaylist")
+        assertEquals(listOf("new", "new"), updates.map { it.queryParameter("playlistId") })
+        val sent = create.queryParameterValues("songId") + updates.flatMap { it.queryParameterValues("songIdToAdd") }
+        assertEquals(ids, sent)
+        assertEquals(1, server.requestsTo("getPlaylists").size) // the list is reloaded so Home shows it
+    }
 }

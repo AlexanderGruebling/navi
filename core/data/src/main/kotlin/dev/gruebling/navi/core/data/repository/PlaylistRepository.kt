@@ -59,6 +59,19 @@ class PlaylistRepository @Inject constructor(
         }.distinctUntilChanged()
 
     /**
+     * Creates a playlist with [songIds] in this order (e.g. the play queue) and reloads the playlist list. The ids go
+     * in chunks: every request is a GET, and a few hundred ids would get too long for some reverse proxies.
+     */
+    suspend fun createPlaylist(name: String, songIds: List<String>): Result<PlaylistId> = suspendRunCatching {
+        val chunks = songIds.chunked(SONGS_PER_REQUEST)
+        val created = api.createPlaylist(name, chunks.firstOrNull().orEmpty()).ok().playlist
+            ?: error("createPlaylist returned no playlist")
+        for (chunk in chunks.drop(1)) api.updatePlaylist(created.id, songIdsToAdd = chunk).ok()
+        refreshPlaylists()
+        PlaylistId(created.id)
+    }
+
+    /**
      * Reloads the playlist list. Also loads the tracks of playlists whose content may have changed: all non-smart
      * playlists whose `changed` moved (for the "Neu" badge) and smart playlists (so opening them shows fresh content
      * without the list jumping). [prefetchSmartLimit] caps the smart ones for huge setups.
@@ -169,3 +182,5 @@ class PlaylistRepository @Inject constructor(
         )
     }
 }
+
+private const val SONGS_PER_REQUEST = 100

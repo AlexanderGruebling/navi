@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import dev.gruebling.navi.core.model.EnqueuePosition
 
 enum class LibraryTab { Playlists, Albums, Artists, Favorites }
 
@@ -124,6 +125,10 @@ class LibraryViewModel @Inject constructor(
             refreshFailed.value = results.any { it.isFailure }
             refreshing.value = false
         }
+    }
+
+    fun enqueueFavorite(index: Int, position: EnqueuePosition) {
+        state.value.favoriteSongs.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
     }
 
     fun playFavorites(startIndex: Int = 0, shuffle: Boolean = false) {

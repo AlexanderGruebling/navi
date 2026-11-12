@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.data.repository.LyricsRepository
+import dev.gruebling.navi.core.data.repository.PlaylistRepository
 import dev.gruebling.navi.core.model.Lyrics
 import dev.gruebling.navi.core.model.SongId
 import dev.gruebling.navi.core.playback.InstantMix
@@ -39,13 +40,17 @@ class PlayerViewModel @Inject constructor(
     private val favorites: FavoritesRepository,
     private val lyricsRepository: LyricsRepository,
     private val instantMix: InstantMix,
+    private val playlists: PlaylistRepository,
 ) : ViewModel() {
     val state: StateFlow<PlayerState> = playback.state
 
     private val _isStartingMix = MutableStateFlow(false)
     val isStartingMix: StateFlow<Boolean> = _isStartingMix
 
-    /** Why a mix didn't start, as string resources to show once. */
+    private val _isSavingQueue = MutableStateFlow(false)
+    val isSavingQueue: StateFlow<Boolean> = _isSavingQueue
+
+    /** Short feedback (why a mix didn't start, a saved queue), as string resources to show once. */
     private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     val messages: SharedFlow<Int> = _messages
 
@@ -81,6 +86,27 @@ class PlayerViewModel @Inject constructor(
     fun cycleRepeat() = playback.cycleRepeat()
     fun skipTo(queueIndex: Int) = playback.skipToQueueIndex(queueIndex)
     fun remove(queueIndex: Int) = playback.removeFromQueue(queueIndex)
+    fun move(fromQueueIndex: Int, toQueueIndex: Int) = playback.moveInQueue(fromQueueIndex, toQueueIndex)
+
+    /** Stops playback and empties the queue (swiping the mini player away). */
+    fun clearQueue() {
+        viewModelScope.launch { playback.stopAndClear() }
+    }
+
+    /** Saves the queue, in its current order, as a new playlist on the server. */
+    fun saveQueueAsPlaylist(name: String) {
+        val songIds = state.value.queue.map { it.songId }
+        if (songIds.isEmpty() || name.isBlank() || _isSavingQueue.value) return
+        viewModelScope.launch {
+            _isSavingQueue.value = true
+            try {
+                val saved = playlists.createPlaylist(name.trim(), songIds).isSuccess
+                _messages.tryEmit(if (saved) R.string.player_queue_saved else R.string.player_queue_save_failed)
+            } finally {
+                _isSavingQueue.value = false
+            }
+        }
+    }
 
     /** The current song keeps playing; what follows becomes songs similar to it, and keeps growing. */
     fun startMix() {
