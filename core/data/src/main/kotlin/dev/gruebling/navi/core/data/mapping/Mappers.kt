@@ -9,6 +9,7 @@ import dev.gruebling.navi.core.model.AlbumId
 import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.model.ArtistId
 import dev.gruebling.navi.core.model.CoverArtId
+import dev.gruebling.navi.core.model.ReplayGain
 import dev.gruebling.navi.core.model.Song
 import dev.gruebling.navi.core.model.SongId
 import dev.gruebling.navi.core.network.model.Album as NetworkAlbum
@@ -39,6 +40,10 @@ internal fun NetworkSong.toEntity() = SongEntity(
     size = size,
     playCount = playCount,
     created = created.toEpochMillis(),
+    rgTrackGain = replayGain?.trackGain,
+    rgAlbumGain = replayGain?.albumGain,
+    rgTrackPeak = replayGain?.trackPeak,
+    rgAlbumPeak = replayGain?.albumPeak,
 )
 
 internal fun NetworkAlbum.toEntity(syncedAt: Long? = null) = AlbumEntity(
@@ -109,6 +114,7 @@ internal fun SongEntity.toDomain() = Song(
     suffix = suffix,
     bitRate = bitRate,
     playCount = playCount,
+    replayGain = ReplayGain(rgTrackGain, rgAlbumGain, rgTrackPeak, rgAlbumPeak).takeUnless { it.isEmpty },
 )
 
 internal fun AlbumEntity.toDomain() = Album(

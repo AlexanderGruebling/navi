@@ -17,6 +17,10 @@ data class QueueItemEntity(
     val durationMs: Long,
     /** Added by an instant mix; while the last item is one, the queue grows by itself. */
     val fromMix: Boolean = false,
+    val rgTrackGain: Float? = null,
+    val rgAlbumGain: Float? = null,
+    val rgTrackPeak: Float? = null,
+    val rgAlbumPeak: Float? = null,
 )
 
 /** Single row (id = 0) with the player state that belongs to the queue. */

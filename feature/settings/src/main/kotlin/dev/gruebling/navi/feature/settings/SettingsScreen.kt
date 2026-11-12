@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.model.Playlist
+import dev.gruebling.navi.core.model.ReplayGainMode
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.ui.component.DotwaveLogo
 import androidx.compose.foundation.layout.Box
@@ -81,6 +82,7 @@ private enum class QualityDialog { Wifi, Mobile }
 @Composable
 private fun SettingsContent(state: SettingsUiState, versionName: String, onBack: () -> Unit, viewModel: SettingsViewModel) {
     var qualityDialog by rememberSaveable { mutableStateOf<QualityDialog?>(null) }
+    var replayGainDialog by rememberSaveable { mutableStateOf(false) }
     var playlistDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmLogout by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -146,6 +148,14 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
                 )
             }
             item(key = "streaming-note") { Note(stringResource(R.string.settings_quality_note)) }
+            item(key = "replay-gain") {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_replay_gain)) },
+                    supportingContent = { Text(stringResource(state.replayGainMode.label)) },
+                    modifier = Modifier.clickable { replayGainDialog = true },
+                )
+            }
+            item(key = "replay-gain-note") { Note(stringResource(R.string.settings_replay_gain_note)) }
 
             // Playlists on Home
             item(key = "playlists-header") { Header(stringResource(R.string.settings_playlists)) }
@@ -224,6 +234,24 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
                 qualityDialog = null
             },
             onDismiss = { qualityDialog = null },
+        )
+    }
+
+    if (replayGainDialog) {
+        AlertDialog(
+            onDismissRequest = { replayGainDialog = false },
+            title = { Text(stringResource(R.string.settings_replay_gain)) },
+            text = {
+                Column(Modifier.selectableGroup()) {
+                    ReplayGainMode.entries.forEach { mode ->
+                        RadioRow(stringResource(mode.label), mode == state.replayGainMode) {
+                            viewModel.setReplayGainMode(mode)
+                            replayGainDialog = false
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { replayGainDialog = false }) { Text(stringResource(R.string.settings_cancel)) } },
         )
     }
 
@@ -322,6 +350,14 @@ private fun PlaylistRow(
             },
     )
 }
+
+private val ReplayGainMode.label: Int
+    get() = when (this) {
+        ReplayGainMode.Off -> R.string.settings_replay_gain_off
+        ReplayGainMode.Track -> R.string.settings_replay_gain_track
+        ReplayGainMode.Album -> R.string.settings_replay_gain_album
+        ReplayGainMode.Auto -> R.string.settings_replay_gain_auto
+    }
 
 @Composable
 private fun QualityChooser(title: String, selected: QualityPreset, onSelect: (QualityPreset) -> Unit, onDismiss: () -> Unit) {

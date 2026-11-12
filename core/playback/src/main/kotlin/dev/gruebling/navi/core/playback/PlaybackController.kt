@@ -10,6 +10,7 @@ import androidx.media3.session.SessionToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.gruebling.navi.core.data.di.ApplicationScope
 import dev.gruebling.navi.core.model.EnqueuePosition
+import dev.gruebling.navi.core.model.ReplayGain
 import dev.gruebling.navi.core.model.Song
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.QueueEntry
@@ -66,6 +67,10 @@ class PlaybackController @Inject constructor(
     fun positionMs(): Long = controller?.currentPosition ?: 0L
 
     fun bufferedPositionMs(): Long = controller?.bufferedPosition ?: 0L
+
+    /** Player volume set by volume levelling, and the tags it came from (debug output); main thread only. */
+    fun levelling(): Pair<Float, ReplayGain?> =
+        (controller?.volume ?: 1f) to controller?.currentMediaItem?.let(MediaItems::replayGain)
 
     /** [fromMix]: the songs are an instant mix, so the queue keeps growing at the end (see MixExtender). */
     fun playSongs(songs: List<Song>, startIndex: Int = 0, shuffle: Boolean = false, fromMix: Boolean = false) = command {

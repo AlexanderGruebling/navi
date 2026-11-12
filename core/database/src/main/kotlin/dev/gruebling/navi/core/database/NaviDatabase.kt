@@ -41,7 +41,7 @@ import dev.gruebling.navi.core.database.entity.SongEntity
         QueueStateEntity::class,
         PendingScrobbleEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class NaviDatabase : RoomDatabase() {

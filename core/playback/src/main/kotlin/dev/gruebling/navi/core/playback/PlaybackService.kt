@@ -35,6 +35,7 @@ class PlaybackService : MediaLibraryService() {
     @Inject lateinit var queuePersistence: QueuePersistence
     @Inject lateinit var scrobbler: Scrobbler
     @Inject lateinit var mixExtender: MixExtender
+    @Inject lateinit var replayGain: ReplayGainApplier
     @Inject lateinit var streamResolver: StreamResolver
 
     private val scope = MainScope()
@@ -59,6 +60,7 @@ class PlaybackService : MediaLibraryService() {
         queuePersistence.attach(player, scope)
         scrobbler.attach(player, scope)
         mixExtender.attach(player, scope)
+        replayGain.attach(player, scope)
 
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)

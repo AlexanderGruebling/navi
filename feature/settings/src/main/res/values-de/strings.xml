@@ -11,6 +11,12 @@
     <string name="settings_quality_wifi">WLAN</string>
     <string name="settings_quality_mobile">Mobile Daten</string>
     <string name="settings_quality_note">Gilt ab dem nächsten Titel. Niedrigere Qualitäten wandelt der Server um.</string>
+    <string name="settings_replay_gain">Lautstärkeangleichung</string>
+    <string name="settings_replay_gain_note">Nutzt die ReplayGain-Tags deiner Dateien, damit Titel ähnlich laut spielen. Automatisch behält beim Hören eines ganzen Albums dessen eigene Dynamik.</string>
+    <string name="settings_replay_gain_off">Aus</string>
+    <string name="settings_replay_gain_track">Pro Titel</string>
+    <string name="settings_replay_gain_album">Pro Album</string>
+    <string name="settings_replay_gain_auto">Automatisch</string>
     <string name="settings_quality_original">Original (keine Umwandlung)</string>
     <string name="settings_quality_high">Hoch · MP3 320 kbps</string>
     <string name="settings_quality_medium">Mittel · Opus 192 kbps</string>

@@ -18,7 +18,18 @@ data class Song(
     val suffix: String?,
     val bitRate: Int?,
     val playCount: Long,
+    val replayGain: ReplayGain? = null,
 )
+
+/** ReplayGain tags of a song (from the server): gains in dB, peaks as linear sample values (1.0 = full scale). */
+data class ReplayGain(
+    val trackGain: Float? = null,
+    val albumGain: Float? = null,
+    val trackPeak: Float? = null,
+    val albumPeak: Float? = null,
+) {
+    val isEmpty: Boolean get() = trackGain == null && albumGain == null
+}
 
 data class Album(
     val id: AlbumId,

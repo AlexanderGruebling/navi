@@ -22,11 +22,13 @@ network is slow, and streams in a sensible quality on mobile data.
   position restored after restart, 500 MB audio cache.
 - **Streaming quality**: separate presets for Wi-Fi and mobile data (Original, MP3 320, Opus 192/128/96).
   Seeking works in transcoded streams too (see below).
+- **Volume levelling** from the files' ReplayGain tags: per song, per album, or automatic (album gain while the
+  neighbouring songs are from the same album). It only turns songs down; untagged songs play at full volume.
 - **Instant mix**: a radio from an artist (artist page) or from the playing song (full player), built from the
   server's similar songs. Near the end of the queue it adds more songs similar to the one playing.
 - **Scrobbling** to the server the way Last.fm counts plays: "now playing" on start, a play after half the track
   or 4 minutes of actual listening.
-- **Settings**: quality presets, per-playlist group override, pinning and ordering, logout.
+- **Settings**: quality presets, volume levelling, per-playlist group override, pinning and ordering, logout.
 
 UI strings are in English and German.
 
@@ -119,7 +121,7 @@ on-device trace processor can't name the RenderThread when the app started befor
 
 - Debug builds include `DebugPlaybackReceiver` for driving playback from adb, e.g.
   `adb shell am broadcast -n dev.gruebling.navi.debug/dev.gruebling.navi.debug.DebugPlaybackReceiver -a navi.debug.PLAY_PLAYLIST --es name "'FM4 Charts'"`
-  (also `TOGGLE`, `NEXT`, `PREVIOUS`, `SEEK`, `STATE`). The debug build logs to the logcat tag `NaviProbe`.
+  (also `TOGGLE`, `NEXT`, `PREVIOUS`, `SEEK`, `STATE`; `STATE` includes the levelling volume and the song's tags). The debug build logs to the logcat tag `NaviProbe`.
 - Unit tests cover the API client and the repositories (JUnit, Turbine, Robolectric). Robolectric on JDK 21
   needs extra `--add-opens` / `--add-exports` flags, which the convention plugin sets.
 - UI elements that the benchmarks use have test tags, exposed as resource ids (`testTagsAsResourceId`).

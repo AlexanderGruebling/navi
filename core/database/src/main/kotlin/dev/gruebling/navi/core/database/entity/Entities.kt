@@ -29,6 +29,11 @@ data class SongEntity(
     val size: Long?,
     val playCount: Long,
     val created: Long?,
+    // ReplayGain: gains in dB, peaks linear.
+    val rgTrackGain: Float? = null,
+    val rgAlbumGain: Float? = null,
+    val rgTrackPeak: Float? = null,
+    val rgAlbumPeak: Float? = null,
 )
 
 @Entity(tableName = "albums", indices = [Index("sortName"), Index("artistId"), Index("starredAt")])

@@ -77,11 +77,12 @@ class DebugPlaybackReceiver : BroadcastReceiver() {
             "navi.debug.SEEK" -> playback.seekTo(intent.getLongExtra("ms", 0))
             "navi.debug.STATE" -> {
                 val s = playback.state.value
+                val (volume, gain) = playback.levelling()
                 Log.i(
                     TAG,
                     "state: playing=${s.isPlaying} buffering=${s.isBuffering} index=${s.currentIndex}/${s.queue.size} " +
                         "current=${s.current?.artist} – ${s.current?.title} pos=${playback.positionMs()}/${s.durationMs} " +
-                        "shuffle=${s.shuffle} repeat=${s.repeat} error=${s.error}",
+                        "shuffle=${s.shuffle} repeat=${s.repeat} error=${s.error} volume=$volume gain=$gain",
                 )
             }
         }

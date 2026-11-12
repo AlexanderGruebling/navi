@@ -11,6 +11,12 @@
     <string name="settings_quality_wifi">Wi-Fi</string>
     <string name="settings_quality_mobile">Mobile data</string>
     <string name="settings_quality_note">Applies from the next track. Lower qualities are converted by the server.</string>
+    <string name="settings_replay_gain">Volume levelling</string>
+    <string name="settings_replay_gain_note">Uses the ReplayGain tags of your files, so songs play at a similar loudness. Automatic keeps an album\'s own dynamics while you listen to the whole album.</string>
+    <string name="settings_replay_gain_off">Off</string>
+    <string name="settings_replay_gain_track">Per song</string>
+    <string name="settings_replay_gain_album">Per album</string>
+    <string name="settings_replay_gain_auto">Automatic</string>
     <string name="settings_quality_original">Original (no conversion)</string>
     <string name="settings_quality_high">High · MP3 320 kbps</string>
     <string name="settings_quality_medium">Medium · Opus 192 kbps</string>

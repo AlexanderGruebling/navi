@@ -11,6 +11,7 @@ import dev.gruebling.navi.core.datastore.StreamingSettingsStore
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistSettings
+import dev.gruebling.navi.core.model.ReplayGainMode
 import dev.gruebling.navi.core.model.StreamingSettings
 import dev.gruebling.navi.core.playback.SignOut
 import javax.inject.Inject
@@ -33,6 +34,7 @@ data class SettingsUiState(
     val username: String? = null,
     val wifiQuality: QualityPresetUi = QualityPresetUi(QualityPreset.Original),
     val mobileQuality: QualityPresetUi = QualityPresetUi(QualityPreset.Original),
+    val replayGainMode: ReplayGainMode = ReplayGainMode.Auto,
     val playlistGroups: ImmutableList<PlaylistGroupUi> = persistentListOf(),
 )
 
@@ -50,14 +52,16 @@ class SettingsViewModel @Inject constructor(
     val state: StateFlow<SettingsUiState> = combine(
         session.state,
         streaming.settings,
+        streaming.replayGainMode,
         playlists.observePlaylists(),
-    ) { s, quality, list ->
+    ) { s, quality, replayGain, list ->
         val loggedIn = s as? SessionState.LoggedIn
         SettingsUiState(
             serverUrl = loggedIn?.serverUrl,
             username = loggedIn?.username,
             wifiQuality = QualityPresetUi(QualityPreset.of(quality.unmetered)),
             mobileQuality = QualityPresetUi(QualityPreset.of(quality.metered)),
+            replayGainMode = replayGain,
             // Same order as on Home: group, pinned first, manual order.
             playlistGroups = list.groupBy { it.group }
                 .toSortedMap(compareBy { it.ordinal })
@@ -68,6 +72,10 @@ class SettingsViewModel @Inject constructor(
 
     internal fun setWifiQuality(preset: QualityPreset) = updateStreaming { it.copy(unmetered = preset.quality) }
     internal fun setMobileQuality(preset: QualityPreset) = updateStreaming { it.copy(metered = preset.quality) }
+
+    fun setReplayGainMode(mode: ReplayGainMode) {
+        viewModelScope.launch { streaming.setReplayGainMode(mode) }
+    }
 
     private fun updateStreaming(change: (StreamingSettings) -> StreamingSettings) {
         viewModelScope.launch { streaming.update(change(streaming.settings.first())) }
