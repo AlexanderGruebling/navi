@@ -17,7 +17,7 @@
     <string name="settings_quality_low">Low · Opus 128 kbps</string>
     <string name="settings_quality_saver">Data saver · Opus 96 kbps</string>
     <string name="settings_playlists">Playlists on Home</string>
-    <string name="settings_playlists_note">Tap a playlist to change its group or pin it. Arrows change the order within a group.</string>
+    <string name="settings_playlists_note">Tap a playlist to change its group or pin it. Drag the handle to change the order within a group.</string>
     <string name="settings_group">Group</string>
     <string name="settings_group_auto">Automatic</string>
     <string name="settings_group_auto_is">Automatic: %1$s</string>

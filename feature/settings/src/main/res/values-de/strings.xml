@@ -17,7 +17,7 @@
     <string name="settings_quality_low">Niedrig · Opus 128 kbps</string>
     <string name="settings_quality_saver">Datensparend · Opus 96 kbps</string>
     <string name="settings_playlists">Playlists auf Home</string>
-    <string name="settings_playlists_note">Tippe auf eine Playlist, um die Gruppe zu ändern oder sie anzuheften. Mit den Pfeilen änderst du die Reihenfolge in der Gruppe.</string>
+    <string name="settings_playlists_note">Tippe auf eine Playlist, um die Gruppe zu ändern oder sie anzuheften. Mit dem Griff ziehst du sie innerhalb der Gruppe an eine andere Stelle.</string>
     <string name="settings_group">Gruppe</string>
     <string name="settings_group_auto">Automatisch</string>
     <string name="settings_group_auto_is">Automatisch: %1$s</string>
