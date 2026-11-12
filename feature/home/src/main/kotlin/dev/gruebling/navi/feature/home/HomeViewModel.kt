@@ -11,6 +11,8 @@ import dev.gruebling.navi.core.model.AlbumListType
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
+import dev.gruebling.navi.core.data.session.SessionManager
+import dev.gruebling.navi.core.data.session.SessionState
 import dev.gruebling.navi.core.playback.PlaybackController
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -40,6 +42,12 @@ data class HomeUiState(
     val refreshFailed: Boolean = false,
     /** Nothing cached yet (first start): show a spinner instead of an empty page. */
     val isLoadingFirstTime: Boolean = true,
+    /** Login name, for the greeting and the avatar. */
+    val username: String? = null,
+    /** Host name of the server ("music.example.com"), shown in the status line. */
+    val serverHost: String? = null,
+    /** Whether the last refresh reached the server; null until the first one has finished. */
+    val serverReachable: Boolean? = null,
 )
 
 private val HOME_ALBUM_LISTS = listOf(AlbumListType.RecentlyPlayed, AlbumListType.RecentlyAdded, AlbumListType.MostPlayed)
@@ -49,9 +57,11 @@ class HomeViewModel @Inject constructor(
     private val playlists: PlaylistRepository,
     private val albums: AlbumRepository,
     private val playback: PlaybackController,
+    private val session: SessionManager,
 ) : ViewModel() {
     private val refreshing = MutableStateFlow(false)
-    private val refreshFailed = MutableStateFlow(false)
+    /** Null until the first refresh has finished. */
+    private val refreshFailed = MutableStateFlow<Boolean?>(null)
 
     private val albumSections = combine(HOME_ALBUM_LISTS.map { type -> albums.observeAlbumList(type) }) { lists ->
         HOME_ALBUM_LISTS.zip(lists.toList()) { type, list -> AlbumSection(type, list.toImmutableList()) }
@@ -64,7 +74,9 @@ class HomeViewModel @Inject constructor(
         albumSections,
         refreshing,
         refreshFailed,
-    ) { playlistList, albumList, isRefreshing, failed ->
+        session.state,
+    ) { playlistList, albumList, isRefreshing, failed, sessionState ->
+        val login = sessionState as? SessionState.LoggedIn
         val sections = playlistList.groupBy { it.group }
             .toSortedMap(compareBy { it.ordinal })
             .map { (group, items) -> PlaylistSection(group, items.toImmutableList()) }
@@ -73,8 +85,11 @@ class HomeViewModel @Inject constructor(
             playlistSections = sections,
             albumSections = albumList,
             isRefreshing = isRefreshing,
-            refreshFailed = failed,
-            isLoadingFirstTime = sections.isEmpty() && albumList.isEmpty() && !failed,
+            refreshFailed = failed == true,
+            isLoadingFirstTime = sections.isEmpty() && albumList.isEmpty() && failed != true,
+            username = login?.username,
+            serverHost = login?.serverUrl?.let(::hostOf),
+            serverReachable = failed?.not(),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -107,3 +122,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+
+/** "https://music.example.com:4533/navidrome" → "music.example.com". Plain string work: never fails, keeps any host. */
+internal fun hostOf(serverUrl: String): String? =
+    serverUrl.substringAfter("://").substringBefore('/').substringBefore('?').substringAfterLast('@')
+        .let { if (it.startsWith("[")) it.substringBefore(']') + "]" else it.substringBefore(':') }
+        .ifBlank { null }

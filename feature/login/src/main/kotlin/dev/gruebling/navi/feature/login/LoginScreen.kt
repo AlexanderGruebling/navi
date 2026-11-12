@@ -3,6 +3,8 @@ package dev.gruebling.navi.feature.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.data.session.LoginResult
+import dev.gruebling.navi.core.ui.component.DotwaveLogo
+import dev.gruebling.navi.core.ui.component.MonoLabel
+import dev.gruebling.navi.core.ui.theme.NaviType
 import dev.gruebling.navi.core.ui.R as UiR
 
 @Composable
@@ -85,6 +90,15 @@ internal fun LoginContent(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                // Brand: the Dotwave mark, the name in dot-matrix type and the tagline.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    DotwaveLogo(size = 56.dp)
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(UiR.string.app_name), style = NaviType.dotTitle)
+                        MonoLabel(stringResource(UiR.string.app_tagline))
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
                 Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineMedium)
                 Text(
                     stringResource(R.string.login_subtitle),

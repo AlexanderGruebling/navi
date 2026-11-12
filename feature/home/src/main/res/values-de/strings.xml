@@ -13,4 +13,10 @@
     <string name="section_random">Alben wiederentdecken</string>
     <string name="home_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
     <string name="home_updated">Aktualisiert %1$s</string>
+    <string name="home_label_smart">Smart-Playlists</string>
+    <string name="home_label_albums">Alben</string>
+    <string name="home_label_auto">Automatisch</string>
+    <string name="home_status_online">Online</string>
+    <string name="home_status_offline">Offline</string>
+    <string name="home_greeting_name">%1$s, %2$s</string>
 </resources>

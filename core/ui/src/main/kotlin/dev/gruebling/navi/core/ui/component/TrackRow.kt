@@ -1,33 +1,42 @@
 package dev.gruebling.navi.core.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.gruebling.navi.core.ui.R
 import dev.gruebling.navi.core.ui.image.CoverArt
+import dev.gruebling.navi.core.ui.theme.NaviColors
+import dev.gruebling.navi.core.ui.theme.NaviType
+
+/** Outer margin for a [TrackRow] in a full-width list: the row's own 8 dp padding then lines up with [ScreenPadding]. */
+val TrackRowInset = ScreenPadding - 8.dp
 
 /**
- * One track in a list. Leading: the cover (playlists) or the track number (albums).
- * The playing track is tinted in the primary color.
+ * One track in a list. The caller sets the outer margin (usually [TrackRowInset]). Leading: the cover (playlists, search) or the track number in dot-matrix digits (albums).
+ * The playing track sits on a raised background and shows equalizer bars instead of its number.
  */
 @Composable
 fun TrackRow(
@@ -41,71 +50,66 @@ fun TrackRow(
     isCurrent: Boolean = false,
     isStarred: Boolean = false,
 ) {
-    val titleColor = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val nowPlaying = stringResource(R.string.cd_now_playing)
     Row(
         modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(60.dp)
+            .clip(MaterialTheme.shapes.small)
+            .then(if (isCurrent) Modifier.background(NaviColors.Surface1) else Modifier)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .then(if (isCurrent) Modifier.semantics { contentDescription = nowPlaying } else Modifier)
+            .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when {
-            trackNumber != null -> Text(
-                trackNumber.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(min = 28.dp),
-            )
-            else -> CoverArt(coverArtId, 48.dp, Modifier.size(48.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            trackNumber != null -> Box(Modifier.width(28.dp), contentAlignment = Alignment.Center) {
                 if (isCurrent) {
-                    // Color alone isn't enough: with some wallpapers the dynamic primary is nearly white.
-                    Icon(
-                        painterResource(R.drawable.ic_play),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp).padding(end = 2.dp),
+                    PlayingBars()
+                } else {
+                    Text(
+                        trackNumber.toString(),
+                        style = NaviType.dotNumber,
+                        color = NaviColors.TextSecondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
                     )
                 }
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (isCurrent) FontWeight.SemiBold else null,
-                    color = titleColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
+            else -> Box(contentAlignment = Alignment.Center) {
+                CoverArt(coverArtId, 44.dp, Modifier.size(44.dp))
+                if (isCurrent) {
+                    Box(Modifier.matchParentSize().clip(MaterialTheme.shapes.small).background(Color.Black.copy(alpha = 0.6f)))
+                    PlayingBars()
+                }
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = NaviColors.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
         if (isStarred) {
-            Box(Modifier.padding(start = 8.dp)) {
-                Icon(
-                    painterResource(R.drawable.ic_star),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+            Icon(
+                painterResource(R.drawable.ic_heart),
+                contentDescription = stringResource(R.string.cd_is_favorite),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp),
+            )
         }
-        Text(
-            formatTrackTime(durationMs),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 12.dp),
-        )
+        MonoLabel(formatTrackTime(durationMs))
     }
 }

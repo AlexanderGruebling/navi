@@ -2,6 +2,7 @@ package dev.gruebling.navi.feature.detail
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -13,6 +14,7 @@ fun PlaylistScreen(playlistId: String, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     CollectionScreen(
         state = state,
+        kindLabel = stringResource(R.string.detail_label_playlist),
         onBack = onBack,
         onPlay = viewModel::play,
         onShuffle = viewModel::shuffle,
@@ -27,5 +29,11 @@ fun AlbumScreen(albumId: String, onBack: () -> Unit) {
         it.create(albumId)
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    CollectionScreen(state = state, onBack = onBack, onPlay = viewModel::play, onShuffle = viewModel::shuffle)
+    CollectionScreen(
+        state = state,
+        kindLabel = stringResource(R.string.detail_label_album),
+        onBack = onBack,
+        onPlay = viewModel::play,
+        onShuffle = viewModel::shuffle,
+    )
 }

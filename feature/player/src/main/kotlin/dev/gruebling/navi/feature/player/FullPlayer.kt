@@ -2,7 +2,6 @@ package dev.gruebling.navi.feature.player
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -30,10 +29,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -51,22 +48,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.RepeatMode
-import dev.gruebling.navi.core.ui.component.WavySeekBar
+import dev.gruebling.navi.core.ui.component.AccentPlayButton
+import dev.gruebling.navi.core.ui.component.MonoLabel
+import dev.gruebling.navi.core.ui.component.WaveformSeekBar
 import dev.gruebling.navi.core.ui.component.formatTrackTime
 import dev.gruebling.navi.core.ui.image.CoverArt
+import dev.gruebling.navi.core.ui.theme.NaviColors
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -158,14 +156,6 @@ private fun FullPlayer(
     val isStarred by viewModel.isCurrentStarred.collectAsStateWithLifecycle()
     var showQueue by rememberSaveable { mutableStateOf(false) }
 
-    val surface = MaterialTheme.colorScheme.surface
-    val coverColor = rememberCoverColor(current?.coverArt)
-    val tint by animateColorAsState(
-        coverColor?.let { lerp(surface, it, 0.45f) } ?: MaterialTheme.colorScheme.surfaceContainerHigh,
-        tween(600),
-        label = "coverTint",
-    )
-
     // Polled position, read only by the seek bar's draw phase and the small time labels.
     val position = remember { mutableLongStateOf(0L) }
     var scrubMs by remember { mutableStateOf<Long?>(null) }
@@ -177,43 +167,50 @@ private fun FullPlayer(
         }
     }
 
-    Surface(modifier.fillMaxSize().testTag("full_player"), color = surface) {
+    Surface(modifier.fillMaxSize().testTag("full_player"), color = NaviColors.Black) {
         Column(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(0f to tint, 0.75f to surface))
                 .systemBarsPadding()
                 .padding(horizontal = 24.dp),
         ) {
-            Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 IconButton(onClick = onCollapse) {
-                    Icon(painterResource(UiR.drawable.ic_expand_more), stringResource(R.string.cd_collapse_player))
+                    Icon(painterResource(UiR.drawable.ic_expand_more), stringResource(R.string.cd_collapse_player), Modifier.size(26.dp))
                 }
-                Text(
-                    stringResource(R.string.player_now_playing),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center,
-                )
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable(enabled = current?.albumId != null) { current?.albumId?.let(onOpenAlbum) }
+                        .padding(vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    MonoLabel(stringResource(R.string.player_now_playing))
+                    current?.album?.let {
+                        Text(it, style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
                 IconButton(onClick = { showQueue = true }) {
                     Icon(painterResource(UiR.drawable.ic_queue_music), stringResource(R.string.cd_open_queue))
                 }
             }
 
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Crossfade(current?.coverArt, label = "cover") { cover ->
-                    CoverArt(
-                        cover,
-                        360.dp,
-                        Modifier.fillMaxWidth().widthIn(max = 480.dp),
-                        shape = MaterialTheme.shapes.extraLarge,
-                    )
+            Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.widthIn(max = 480.dp)) {
+                    Crossfade(current?.coverArt, label = "cover") { cover ->
+                        CoverArt(cover, 360.dp, Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge)
+                    }
+                    QueuePosition(state, Modifier.align(Alignment.TopEnd).padding(14.dp))
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         current?.title.orEmpty(),
                         style = MaterialTheme.typography.headlineSmall,
@@ -221,47 +218,40 @@ private fun FullPlayer(
                         // Long titles scroll slowly instead of being cut off.
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 2_000),
                     )
+                    // The album is in the header above (and opens from there).
                     Text(
-                        listOfNotNull(current?.artist ?: stringResource(R.string.player_unknown_artist), current?.album)
-                            .joinToString(" · "),
+                        current?.artist ?: stringResource(R.string.player_unknown_artist),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = NaviColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.small)
-                            .clickable(enabled = current?.albumId != null) { current?.albumId?.let(onOpenAlbum) },
                     )
                 }
-                IconToggleButton(checked = isStarred, onCheckedChange = { viewModel.toggleStar() }) {
+                IconToggleButton(checked = isStarred, onCheckedChange = { viewModel.toggleStar() }, modifier = Modifier.offset(x = 10.dp)) {
                     Icon(
-                        painterResource(if (isStarred) UiR.drawable.ic_star else UiR.drawable.ic_star_outline),
+                        painterResource(if (isStarred) UiR.drawable.ic_heart else UiR.drawable.ic_heart_outline),
                         contentDescription = stringResource(if (isStarred) UiR.string.cd_unfavorite else UiR.string.cd_favorite),
-                        tint = if (isStarred) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (isStarred) MaterialTheme.colorScheme.primary else NaviColors.White,
+                        modifier = Modifier.size(26.dp),
                     )
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            WavySeekBar(
+            Spacer(Modifier.height(20.dp))
+            WaveformSeekBar(
                 positionMs = { scrubMs ?: position.longValue },
                 durationMs = state.durationMs,
-                isPlaying = state.isPlaying && scrubMs == null,
+                seed = current?.songId,
                 onSeek = { viewModel.seekTo(it); position.longValue = it },
                 onScrub = { scrubMs = it },
             )
-            Row(Modifier.fillMaxWidth()) {
-                val shown = scrubMs ?: position.longValue
-                Text(formatTrackTime(shown), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                MonoLabel(formatTrackTime(scrubMs ?: position.longValue))
                 Spacer(Modifier.weight(1f))
-                Text(
-                    "-" + formatTrackTime((state.durationMs - shown).coerceAtLeast(0)),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MonoLabel(formatTrackTime(state.durationMs))
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
             Controls(state, viewModel)
             Spacer(Modifier.height(32.dp))
         }
@@ -277,6 +267,25 @@ private fun FullPlayer(
     }
 }
 
+/** "03 / 40" on the cover: the track's place in the play order. */
+@Composable
+private fun QueuePosition(state: PlayerState, modifier: Modifier = Modifier) {
+    val total = state.queue.size
+    if (total < 2) return
+    val order = state.playOrder.ifEmpty { state.queue.indices.toList() }
+    val place = order.indexOf(state.currentIndex) + 1
+    if (place <= 0) return
+    val width = total.toString().length.coerceAtLeast(2)
+    MonoLabel(
+        "%0${width}d / %d".format(place, total),
+        color = NaviColors.White,
+        bold = true,
+        modifier = modifier
+            .background(NaviColors.Black.copy(alpha = 0.55f), MaterialTheme.shapes.extraSmall)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    )
+}
+
 @Composable
 private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
     Row(
@@ -287,26 +296,22 @@ private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
         IconToggleButton(checked = state.shuffle, onCheckedChange = { viewModel.toggleShuffle() }) {
             ModeIcon(UiR.drawable.ic_shuffle, stringResource(UiR.string.cd_shuffle), on = state.shuffle)
         }
-        IconButton(onClick = viewModel::previous, enabled = state.hasPrevious, modifier = Modifier.size(56.dp)) {
-            Icon(painterResource(UiR.drawable.ic_skip_previous), stringResource(UiR.string.cd_previous), Modifier.size(36.dp))
+        IconButton(onClick = viewModel::previous, enabled = state.hasPrevious, modifier = Modifier.size(52.dp)) {
+            Icon(painterResource(UiR.drawable.ic_skip_previous), stringResource(UiR.string.cd_previous), Modifier.size(30.dp))
         }
-        FilledIconButton(
-            onClick = viewModel::togglePlayPause,
-            modifier = Modifier.size(76.dp),
-            shape = if (state.isPlaying) MaterialTheme.shapes.large else RoundedCornerShape(50),
-            colors = IconButtonDefaults.filledIconButtonColors(),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                if (state.isBuffering) CircularProgressIndicator(Modifier.size(56.dp), strokeWidth = 3.dp, color = MaterialTheme.colorScheme.onPrimary)
-                Icon(
-                    painterResource(if (state.isPlaying) UiR.drawable.ic_pause else UiR.drawable.ic_play),
-                    stringResource(if (state.isPlaying) UiR.string.cd_pause else UiR.string.cd_play),
-                    Modifier.size(36.dp),
-                )
+        Box(contentAlignment = Alignment.Center) {
+            AccentPlayButton(
+                onClick = viewModel::togglePlayPause,
+                size = 76.dp,
+                icon = if (state.isPlaying) UiR.drawable.ic_pause else UiR.drawable.ic_play,
+                contentDescription = stringResource(if (state.isPlaying) UiR.string.cd_pause else UiR.string.cd_play),
+            )
+            if (state.isBuffering) {
+                CircularProgressIndicator(Modifier.size(76.dp), strokeWidth = 2.dp, color = NaviColors.White)
             }
         }
-        IconButton(onClick = viewModel::next, enabled = state.hasNext, modifier = Modifier.size(56.dp)) {
-            Icon(painterResource(UiR.drawable.ic_skip_next), stringResource(UiR.string.cd_next), Modifier.size(36.dp))
+        IconButton(onClick = viewModel::next, enabled = state.hasNext, modifier = Modifier.size(52.dp)) {
+            Icon(painterResource(UiR.drawable.ic_skip_next), stringResource(UiR.string.cd_next), Modifier.size(30.dp))
         }
         IconButton(onClick = viewModel::cycleRepeat) {
             ModeIcon(
@@ -324,21 +329,17 @@ private fun Controls(state: PlayerState, viewModel: PlayerViewModel) {
     }
 }
 
-/**
- * Shuffle/repeat icon. "On" is shown by a dot underneath, not only by color: with some wallpapers the dynamic
- * primary is nearly white and indistinguishable from the "off" tint.
- */
+/** Shuffle/repeat icon: white when on, grey when off, and a red dot underneath when on. */
 @Composable
 private fun ModeIcon(icon: Int, contentDescription: String, on: Boolean) {
-    val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
     Box(contentAlignment = Alignment.Center) {
-        Icon(painterResource(icon), contentDescription, tint = color)
+        Icon(painterResource(icon), contentDescription, tint = if (on) NaviColors.White else NaviColors.TextTertiary)
         if (on) {
             Box(
                 Modifier
                     .offset(y = 16.dp)
                     .size(4.dp)
-                    .background(color, CircleShape),
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
             )
         }
     }

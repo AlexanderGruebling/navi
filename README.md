@@ -1,4 +1,4 @@
-# Navi
+# Dotwave
 
 A native Android client for [Navidrome](https://www.navidrome.org/) (and other Subsonic / OpenSubsonic servers),
 written in Kotlin with Jetpack Compose and Media3.
@@ -13,8 +13,10 @@ network is slow, and streams in a sensible quality on mobile data.
 - **Library**: albums (paged grid, sort by recently added / name / artist), artists with letter headers,
   favorites. Artist pages with "shuffle all".
 - **Search**: local results instantly, server results after a short debounce.
-- **Player**: mini player plus a full player with a wavy seek bar, cover-tinted background, queue sheet,
-  shuffle / repeat, favorite. Drag down or use predictive back to close.
+- **Player**: mini player plus a full player with a waveform seek bar, queue sheet, shuffle / repeat, favorite.
+  Drag down or use predictive back to close.
+- **Look**: black, monochrome and one red accent, after the "Dotwave × NothingOS" design: Space Grotesk for text,
+  Doto (dot matrix) for titles and numbers, Space Mono for small caps labels. Dark only.
 - **Playback** (Media3 `MediaLibraryService`): notification and lock screen controls, Bluetooth, queue and
   position restored after restart, 500 MB audio cache.
 - **Streaming quality**: separate presets for Wi-Fi and mobile data (Original, MP3 320, Opus 192/128/96).
@@ -59,7 +61,7 @@ core/
   data/               Repositories (cache first, refresh from server), session / login / logout
   playback/           PlaybackService, controller, stream resolver, scrobbler, queue persistence
   navigation/         Navigation 3 routes
-  ui/                 Theme, shared components (tiles, wavy seek bar), image loading
+  ui/                 Theme and fonts, shared components (tiles, chips, track rows, seek bar), image loading
 feature/
   login/  home/  library/  search/  detail/  player/  settings/
 benchmark/            Macrobenchmarks and baseline profile generator

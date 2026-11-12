@@ -13,4 +13,10 @@
     <string name="section_random">Rediscover albums</string>
     <string name="home_offline">Can\'t reach the server. Showing saved data.</string>
     <string name="home_updated">Updated %1$s</string>
+    <string name="home_label_smart">Smart playlists</string>
+    <string name="home_label_albums">Albums</string>
+    <string name="home_label_auto">Auto-updated</string>
+    <string name="home_status_online">Online</string>
+    <string name="home_status_offline">Offline</string>
+    <string name="home_greeting_name">%1$s, %2$s</string>
 </resources>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_tagline">Deine eigene Musik, überall</string>
     <string name="badge_new">Neu</string>
     <string name="cd_play">Abspielen</string>
     <string name="cd_pause">Pause</string>
@@ -10,6 +11,8 @@
     <string name="cd_settings">Einstellungen</string>
     <string name="cd_favorite">Zu Favoriten</string>
     <string name="cd_unfavorite">Aus Favoriten entfernen</string>
+    <string name="cd_now_playing">Wird gerade gespielt</string>
+    <string name="cd_is_favorite">Favorit</string>
     <plurals name="song_count">
         <item quantity="one">%d Titel</item>
         <item quantity="other">%d Titel</item>

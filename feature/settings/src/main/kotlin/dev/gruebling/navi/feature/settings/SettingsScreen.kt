@@ -49,6 +49,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
+import dev.gruebling.navi.core.ui.component.DotwaveLogo
 import dev.gruebling.navi.core.ui.R as UiR
 
 @Composable
@@ -148,7 +149,8 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
             item(key = "about-header") { Header(stringResource(R.string.settings_about)) }
             item(key = "about") {
                 ListItem(
-                    headlineContent = { Text("Navi") },
+                    headlineContent = { Text(stringResource(UiR.string.app_name)) },
+                    leadingContent = { DotwaveLogo(size = 40.dp) },
                     supportingContent = { Text(stringResource(R.string.settings_version, versionName)) },
                 )
             }
