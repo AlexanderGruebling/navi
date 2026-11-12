@@ -102,10 +102,10 @@ internal fun HomeContent(
             item(key = "header", contentType = "header") {
                 HomeHeader(state, onOpenSettings)
             }
-            if (state.refreshFailed) {
+            if (state.refreshFailed || state.noNetwork) {
                 item(key = "offline", contentType = "banner") {
                     Text(
-                        stringResource(R.string.home_offline),
+                        stringResource(if (state.noNetwork) R.string.home_no_network else R.string.home_offline),
                         style = MaterialTheme.typography.bodySmall,
                         color = NaviColors.TextSecondary,
                         modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),

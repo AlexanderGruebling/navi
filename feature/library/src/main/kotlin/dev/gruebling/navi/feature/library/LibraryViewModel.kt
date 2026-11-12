@@ -20,6 +20,7 @@ import dev.gruebling.navi.core.model.Artist
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.Song
 import dev.gruebling.navi.core.playback.PlaybackController
+import dev.gruebling.navi.core.data.util.NetworkMonitor
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,6 +31,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -73,6 +76,8 @@ data class LibraryUiState(
     val currentSongId: String? = null,
     val isRefreshing: Boolean = false,
     val refreshFailed: Boolean = false,
+    /** The device has no network at all (not just an unreachable server). */
+    val noNetwork: Boolean = false,
     val downloads: DownloadsUi = DownloadsUi(),
 )
 
@@ -85,7 +90,10 @@ class LibraryViewModel @Inject constructor(
     private val favoritesRepository: FavoritesRepository,
     private val playback: PlaybackController,
     downloads: Downloads,
+    network: NetworkMonitor,
 ) : ViewModel() {
+    private val hasNetwork = network.hasNetwork.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     private val tab = savedState.getStateFlow(KEY_TAB, LibraryTab.Playlists)
     private val albumSort = savedState.getStateFlow(KEY_SORT, AlbumSort.RecentlyAdded)
     private val refreshing = MutableStateFlow(false)
@@ -112,9 +120,9 @@ class LibraryViewModel @Inject constructor(
         combine(tab, albumSort, ::Pair),
         content,
         playback.state.map { it.current?.songId }.distinctUntilChanged(),
-        combine(refreshing, refreshFailed, ::Pair),
+        combine(refreshing, refreshFailed, hasNetwork, ::Triple),
         downloadsUi,
-    ) { (tab, sort), (playlists, artistGroups, favorites), currentSongId, (isRefreshing, failed), downloads ->
+    ) { (tab, sort), (playlists, artistGroups, favorites), currentSongId, (isRefreshing, failed, online), downloads ->
         LibraryUiState(
             tab = tab,
             albumSort = sort,
@@ -125,13 +133,18 @@ class LibraryViewModel @Inject constructor(
             favoriteArtists = favorites.artists.toImmutableList(),
             currentSongId = currentSongId,
             isRefreshing = isRefreshing,
-            refreshFailed = failed,
+            refreshFailed = online && failed,
+            noNetwork = !online,
             downloads = downloads,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState(tab = tab.value, albumSort = albumSort.value))
 
     init {
         refresh()
+        // Back online: reload, so the note goes away and the lists catch up without a pull.
+        viewModelScope.launch {
+            hasNetwork.drop(1).filter { it }.collect { refresh() }
+        }
     }
 
     fun selectTab(tab: LibraryTab) {

@@ -20,4 +20,5 @@
     <string name="library_downloads_summary">%1$d heruntergeladen · %2$s</string>
     <string name="library_download_album">Album</string>
     <string name="library_download_playlist">Playlist</string>
+    <string name="library_no_network">Kein Netz. Gespeicherte Daten werden angezeigt; heruntergeladene Musik spielt wie gewohnt.</string>
 </resources>

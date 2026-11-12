@@ -153,9 +153,9 @@ private fun LibraryContent(
                 )
             }
         }
-        if (state.refreshFailed) {
+        if (state.refreshFailed || state.noNetwork) {
             Text(
-                stringResource(R.string.library_offline),
+                stringResource(if (state.noNetwork) R.string.library_no_network else R.string.library_offline),
                 style = MaterialTheme.typography.bodySmall,
                 color = NaviColors.TextSecondary,
                 modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),

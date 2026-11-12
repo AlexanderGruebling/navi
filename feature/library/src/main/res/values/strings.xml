@@ -20,4 +20,5 @@
     <string name="library_downloads_summary">%1$d downloaded · %2$s</string>
     <string name="library_download_album">Album</string>
     <string name="library_download_playlist">Playlist</string>
+    <string name="library_no_network">No network. Showing saved data; downloaded music plays as usual.</string>
 </resources>

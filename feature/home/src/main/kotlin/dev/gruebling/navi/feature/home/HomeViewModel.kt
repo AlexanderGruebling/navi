@@ -14,12 +14,15 @@ import dev.gruebling.navi.core.model.PlaylistId
 import dev.gruebling.navi.core.data.session.SessionManager
 import dev.gruebling.navi.core.data.session.SessionState
 import dev.gruebling.navi.core.playback.PlaybackController
+import dev.gruebling.navi.core.data.util.NetworkMonitor
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,8 +49,10 @@ data class HomeUiState(
     val username: String? = null,
     /** Host name of the server ("music.example.com"), shown in the status line. */
     val serverHost: String? = null,
-    /** Whether the last refresh reached the server; null until the first one has finished. */
+    /** Whether the last refresh reached the server; null until the first one has finished. False without network. */
     val serverReachable: Boolean? = null,
+    /** The device has no network at all (not just an unreachable server). */
+    val noNetwork: Boolean = false,
 )
 
 private val HOME_ALBUM_LISTS = listOf(AlbumListType.RecentlyPlayed, AlbumListType.RecentlyAdded, AlbumListType.MostPlayed)
@@ -58,7 +63,10 @@ class HomeViewModel @Inject constructor(
     private val albums: AlbumRepository,
     private val playback: PlaybackController,
     private val session: SessionManager,
+    network: NetworkMonitor,
 ) : ViewModel() {
+    private val hasNetwork = network.hasNetwork.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     private val refreshing = MutableStateFlow(false)
     /** Null until the first refresh has finished. */
     private val refreshFailed = MutableStateFlow<Boolean?>(null)
@@ -72,10 +80,9 @@ class HomeViewModel @Inject constructor(
     val state: StateFlow<HomeUiState> = combine(
         playlists.observePlaylists(),
         albumSections,
-        refreshing,
-        refreshFailed,
+        combine(refreshing, refreshFailed, hasNetwork, ::Triple),
         session.state,
-    ) { playlistList, albumList, isRefreshing, failed, sessionState ->
+    ) { playlistList, albumList, (isRefreshing, failed, online), sessionState ->
         val login = sessionState as? SessionState.LoggedIn
         val sections = playlistList.groupBy { it.group }
             .toSortedMap(compareBy { it.ordinal })
@@ -85,16 +92,22 @@ class HomeViewModel @Inject constructor(
             playlistSections = sections,
             albumSections = albumList,
             isRefreshing = isRefreshing,
-            refreshFailed = failed == true,
+            refreshFailed = online && failed == true,
             isLoadingFirstTime = sections.isEmpty() && albumList.isEmpty() && failed != true,
             username = login?.username,
             serverHost = login?.serverUrl?.let(::hostOf),
-            serverReachable = failed?.not(),
+            // Without network the answer is known right away, whatever the last refresh said.
+            serverReachable = if (!online) false else failed?.not(),
+            noNetwork = !online,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     init {
         refresh(userInitiated = false)
+        // Back online: reload, so the status and the lists catch up without a pull.
+        viewModelScope.launch {
+            hasNetwork.drop(1).filter { it }.collect { refresh(userInitiated = false) }
+        }
     }
 
     fun refresh(userInitiated: Boolean = true) {
