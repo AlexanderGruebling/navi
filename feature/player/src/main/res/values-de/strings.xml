@@ -9,4 +9,9 @@
     <string name="cd_repeat_off">Wiederholen aus</string>
     <string name="cd_repeat_all">Alle wiederholen</string>
     <string name="cd_repeat_one">Titel wiederholen</string>
+    <string name="player_lyrics">Songtext</string>
+    <string name="player_lyrics_synced">Synchron</string>
+    <string name="cd_open_lyrics">Songtext anzeigen</string>
+    <string name="cd_close_lyrics">Songtext schließen</string>
+    <string name="cd_lyrics_seek">Ab dieser Zeile abspielen</string>
 </resources>

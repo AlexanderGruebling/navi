@@ -1,64 +1,74 @@
 package dev.gruebling.navi.core.ui.theme
 
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// Fallback palette for devices without dynamic color (Android 8–11).
-// Seed: #F3BF48, the homelab's Noctalia/Glance accent.
+/**
+ * The Nothing-style palette from the "Dotwave × NothingOS" design: pure black, a ladder of greys for raised
+ * surfaces, white text and one red accent. The app is dark only.
+ */
+object NaviColors {
+    val Black = Color(0xFF000000)
+    val White = Color(0xFFFFFFFF)
 
-internal val LightColors = lightColorScheme(
-    primary = Color(0xFF775A00),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFFFDF9C),
-    onPrimaryContainer = Color(0xFF251A00),
-    secondary = Color(0xFF6A5D3F),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFF3E0BB),
-    onSecondaryContainer = Color(0xFF231A04),
-    tertiary = Color(0xFF48654A),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFC9EBC9),
-    onTertiaryContainer = Color(0xFF05210B),
-    background = Color(0xFFFFF8F1),
-    onBackground = Color(0xFF1F1B13),
-    surface = Color(0xFFFFF8F1),
-    onSurface = Color(0xFF1F1B13),
-    surfaceVariant = Color(0xFFECE1CF),
-    onSurfaceVariant = Color(0xFF4D4639),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFAF3E7),
-    surfaceContainer = Color(0xFFF4EDE1),
-    surfaceContainerHigh = Color(0xFFEEE7DB),
-    surfaceContainerHighest = Color(0xFFE9E2D6),
-    outline = Color(0xFF7E7667),
-    outlineVariant = Color(0xFFD0C5B4),
-)
+    /** Signal red: play buttons, the active tab dot, progress, "new" badges. */
+    val Accent = Color(0xFFD71921)
 
-internal val DarkColors = darkColorScheme(
-    primary = Color(0xFFF3BF48),
-    onPrimary = Color(0xFF3F2E00),
-    primaryContainer = Color(0xFF5B4300),
-    onPrimaryContainer = Color(0xFFFFDF9C),
-    secondary = Color(0xFFD6C4A0),
-    onSecondary = Color(0xFF392F15),
-    secondaryContainer = Color(0xFF51462A),
-    onSecondaryContainer = Color(0xFFF3E0BB),
-    tertiary = Color(0xFFAECFAE),
-    onTertiary = Color(0xFF1A3720),
-    tertiaryContainer = Color(0xFF314D34),
-    onTertiaryContainer = Color(0xFFC9EBC9),
-    background = Color(0xFF080808),
-    onBackground = Color(0xFFEAE1D4),
-    surface = Color(0xFF080808),
-    onSurface = Color(0xFFEAE1D4),
-    surfaceVariant = Color(0xFF4D4639),
-    onSurfaceVariant = Color(0xFFD0C5B4),
-    surfaceContainerLowest = Color(0xFF050505),
-    surfaceContainerLow = Color(0xFF121110),
-    surfaceContainer = Color(0xFF181715),
-    surfaceContainerHigh = Color(0xFF22201D),
-    surfaceContainerHighest = Color(0xFF2D2B27),
-    outline = Color(0xFF999080),
-    outlineVariant = Color(0xFF4D4639),
+    /** Cards and the highlighted (playing) row. */
+    val Surface1 = Color(0xFF141414)
+
+    /** Mini player, avatar, chip-like containers. */
+    val Surface2 = Color(0xFF1C1C1C)
+
+    /** Placeholders, pressed states. */
+    val Surface3 = Color(0xFF2B2B2B)
+
+    /** Hairlines: the navigation bar's top border. */
+    val Hairline = Color(0xFF1A1A1A)
+
+    /** Outlines of unselected chips, unplayed part of seek bars. */
+    val Outline = Color(0xFF333333)
+
+    /** Secondary text. 7.4:1 on black. */
+    val TextSecondary = Color(0xFF9A9A9A)
+
+    /** Inactive icons and labels (navigation bar). 5.9:1 on black. */
+    val TextTertiary = Color(0xFF8A8A8A)
+}
+
+internal val NaviColorScheme = darkColorScheme(
+    primary = NaviColors.Accent,
+    onPrimary = NaviColors.White,
+    primaryContainer = NaviColors.Accent,
+    onPrimaryContainer = NaviColors.White,
+    secondary = NaviColors.White,
+    onSecondary = NaviColors.Black,
+    secondaryContainer = NaviColors.White,
+    onSecondaryContainer = NaviColors.Black,
+    tertiary = NaviColors.White,
+    onTertiary = NaviColors.Black,
+    tertiaryContainer = NaviColors.Surface2,
+    onTertiaryContainer = NaviColors.White,
+    background = NaviColors.Black,
+    onBackground = NaviColors.White,
+    surface = NaviColors.Black,
+    onSurface = NaviColors.White,
+    surfaceVariant = NaviColors.Surface2,
+    onSurfaceVariant = NaviColors.TextSecondary,
+    surfaceTint = NaviColors.Black,
+    inverseSurface = NaviColors.White,
+    inverseOnSurface = NaviColors.Black,
+    inversePrimary = NaviColors.Accent,
+    surfaceBright = NaviColors.Surface3,
+    surfaceDim = NaviColors.Black,
+    surfaceContainerLowest = NaviColors.Black,
+    surfaceContainerLow = Color(0xFF0C0C0C),
+    surfaceContainer = NaviColors.Surface1,
+    surfaceContainerHigh = NaviColors.Surface2,
+    surfaceContainerHighest = NaviColors.Surface3,
+    outline = NaviColors.Outline,
+    outlineVariant = Color(0xFF222222),
+    error = Color(0xFFFF5A5F),
+    onError = NaviColors.Black,
+    scrim = NaviColors.Black,
 )

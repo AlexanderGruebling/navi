@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -19,15 +17,15 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
-import dev.gruebling.navi.core.ui.R
+import dev.gruebling.navi.core.ui.component.dotGrid
+import dev.gruebling.navi.core.ui.theme.NaviColors
 import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Square cover art. [size] is the rendered size; it picks which server size to request.
- * Without a cover id: a neutral placeholder with a note icon.
+ * Without a cover id: the dot-grid placeholder.
  */
 @Composable
 fun CoverArt(
@@ -43,17 +41,10 @@ fun CoverArt(
         modifier
             .aspectRatio(1f)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            .then(if (request == null) Modifier.dotGrid() else Modifier.background(NaviColors.Surface2)),
         contentAlignment = Alignment.Center,
     ) {
-        if (request == null) {
-            Icon(
-                painterResource(R.drawable.ic_music_note),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(size / 3),
-            )
-        } else {
+        if (request != null) {
             AsyncImage(
                 model = request,
                 contentDescription = contentDescription,

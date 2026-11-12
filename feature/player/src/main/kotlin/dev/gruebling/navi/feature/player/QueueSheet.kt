@@ -20,7 +20,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.gruebling.navi.core.playback.model.PlayerState
+import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.TrackRow
+import dev.gruebling.navi.core.ui.component.TrackRowInset
 import dev.gruebling.navi.core.ui.R as UiR
 
 /** The queue in play order, scrolled so the current track is on top. Tap to jump, × to remove. */
@@ -39,13 +41,13 @@ internal fun QueueSheet(
         Text(
             stringResource(R.string.player_queue),
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),
         )
         LazyColumn(state = listState) {
             itemsIndexed(order, key = { _, queueIndex -> "${state.queue.getOrNull(queueIndex)?.songId}#$queueIndex" }) { _, queueIndex ->
                 val entry = state.queue.getOrNull(queueIndex) ?: return@itemsIndexed
                 val isCurrent = queueIndex == state.currentIndex
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.padding(start = TrackRowInset, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     TrackRow(
                         title = entry.title,
                         subtitle = entry.artist,

@@ -1,6 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stroke icon from the Navidrome x NothingOS design (24 px grid, 1.75 stroke). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24"
-    android:autoMirrored="false">
-    <path android:fillColor="#FF000000" android:pathData="M7,7h10v3l4,-4 -4,-4v3H5v6h2V7zM17,17H7v-3l-4,4 4,4v-3h12v-6h-2v4zM13,15V9h-1l-2,1v1h1.5v4H13z" />
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5,11V9a2,2 0 0,1 2,-2h11M15.5,4.5L18,7l-2.5,2.5M19,13v2a2,2 0 0,1 -2,2H6M8.5,19.5L6,17l2.5,-2.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.75"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M11,11l1.25,-1v4.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.75"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

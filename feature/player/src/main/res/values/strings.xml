@@ -9,4 +9,9 @@
     <string name="cd_repeat_off">Repeat off</string>
     <string name="cd_repeat_all">Repeat all</string>
     <string name="cd_repeat_one">Repeat one</string>
+    <string name="player_lyrics">Lyrics</string>
+    <string name="player_lyrics_synced">Synced</string>
+    <string name="cd_open_lyrics">Show lyrics</string>
+    <string name="cd_close_lyrics">Close lyrics</string>
+    <string name="cd_lyrics_seek">Play from this line</string>
 </resources>

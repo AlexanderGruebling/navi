@@ -74,6 +74,14 @@ interface SubsonicApi {
     ): SubsonicEnvelope
 
     /** [submission] false = "now playing", true = counts as a play. [time] in ms since epoch. */
+    /** OpenSubsonic `songLyrics` extension: structured (possibly synced) lyrics from the song's tags or sidecar files. */
+    @GET("rest/getLyricsBySongId")
+    suspend fun getLyricsBySongId(@Query("id") id: String): SubsonicEnvelope
+
+    /** Classic Subsonic lyrics lookup by artist and title: plain text (Navidrome may keep LRC timestamps in it). */
+    @GET("rest/getLyrics")
+    suspend fun getLyrics(@Query("artist") artist: String?, @Query("title") title: String?): SubsonicEnvelope
+
     @GET("rest/scrobble")
     suspend fun scrobble(
         @Query("id") songId: String,

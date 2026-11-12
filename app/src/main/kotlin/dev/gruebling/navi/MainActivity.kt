@@ -1,7 +1,9 @@
 package dev.gruebling.navi
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -31,7 +33,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Keep the splash until we know whether a login exists (one small DataStore read), so there is no login flash.
         installSplashScreen().setKeepOnScreenCondition { viewModel.session.value == SessionState.Loading }
-        enableEdgeToEdge()
+        // The app is dark only: light bar icons whatever the system theme, no light scrim behind the nav bar.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         setContent {
             NaviTheme {

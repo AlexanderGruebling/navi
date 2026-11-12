@@ -10,7 +10,7 @@
     <string name="library_sort_name">Name</string>
     <string name="library_sort_artist">Künstler</string>
     <string name="library_offline">Server nicht erreichbar. Gespeicherte Daten werden angezeigt.</string>
-    <string name="library_favorites_empty">Noch keine Favoriten. Tippe im Player auf den Stern, um Songs hinzuzufügen.</string>
+    <string name="library_favorites_empty">Noch keine Favoriten. Tippe im Player auf das Herz, um Songs hinzuzufügen.</string>
     <plurals name="album_count">
         <item quantity="one">%d Album</item>
         <item quantity="other">%d Alben</item>

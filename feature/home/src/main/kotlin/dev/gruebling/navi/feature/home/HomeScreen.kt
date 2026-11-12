@@ -2,6 +2,7 @@ package dev.gruebling.navi.feature.home
 
 import android.text.format.DateUtils
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,20 +13,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -34,9 +31,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -45,10 +46,18 @@ import dev.gruebling.navi.core.model.AlbumListType
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
+import dev.gruebling.navi.core.ui.component.AccentPlayButton
 import dev.gruebling.navi.core.ui.component.CoverTile
+import dev.gruebling.navi.core.ui.component.LetterAvatar
+import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.NewBadge
+import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.SectionHeader
+import dev.gruebling.navi.core.ui.component.ShortcutTile
+import dev.gruebling.navi.core.ui.component.StatusLabel
 import dev.gruebling.navi.core.ui.image.CoverArt
+import dev.gruebling.navi.core.ui.theme.NaviColors
+import dev.gruebling.navi.core.ui.theme.NaviType
 import java.time.LocalTime
 import dev.gruebling.navi.core.ui.R as UiR
 
@@ -91,15 +100,15 @@ internal fun HomeContent(
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             item(key = "header", contentType = "header") {
-                HomeHeader(onOpenSettings)
+                HomeHeader(state, onOpenSettings)
             }
             if (state.refreshFailed) {
                 item(key = "offline", contentType = "banner") {
                     Text(
                         stringResource(R.string.home_offline),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NaviColors.TextSecondary,
+                        modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),
                     )
                 }
             }
@@ -112,22 +121,43 @@ internal fun HomeContent(
             }
             state.playlistSections.forEach { section ->
                 item(key = "group-${section.group}", contentType = "sectionHeader") {
-                    SectionHeader(stringResource(section.group.title))
+                    SectionHeader(stringResource(section.group.title), label = section.group.label?.let { stringResource(it) })
                 }
-                if (section.group == PlaylistGroup.Charts) {
+                when (section.group) {
                     // Charts as wide cards: a new chart week has to be impossible to miss.
-                    items(section.playlists, key = { "chart-${it.id.value}" }, contentType = { "chartCard" }) { playlist ->
+                    PlaylistGroup.Charts -> items(section.playlists, key = { "chart-${it.id.value}" }, contentType = { "chartCard" }) { playlist ->
                         ChartCard(
                             playlist = playlist,
                             onOpen = { onOpenPlaylist(playlist.id.value) },
                             onPlay = { onPlayPlaylist(playlist.id) },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),
                         )
                     }
-                } else {
-                    item(key = "row-${section.group}", contentType = "playlistRow") {
+                    // Own playlists as compact two-column shortcuts.
+                    PlaylistGroup.Mine -> items(
+                        section.playlists.chunked(2),
+                        key = { "mine-${it.first().id.value}" },
+                        contentType = { "shortcutRow" },
+                    ) { pair ->
+                        Row(
+                            Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            pair.forEach { playlist ->
+                                ShortcutTile(
+                                    title = playlist.name,
+                                    coverArtId = playlist.coverArt?.value,
+                                    isNew = playlist.hasNewContent,
+                                    onClick = { onOpenPlaylist(playlist.id.value) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (pair.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                    PlaylistGroup.ForYou -> item(key = "row-${section.group}", contentType = "playlistRow") {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            contentPadding = PaddingValues(horizontal = ScreenPadding),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(section.playlists, key = { it.id.value }, contentType = { "playlistTile" }) { playlist ->
@@ -145,11 +175,11 @@ internal fun HomeContent(
             }
             state.albumSections.forEach { section ->
                 item(key = "albums-header-${section.type}", contentType = "sectionHeader") {
-                    SectionHeader(stringResource(section.type.title))
+                    SectionHeader(stringResource(section.type.title), label = stringResource(R.string.home_label_albums))
                 }
                 item(key = "albums-${section.type}", contentType = "albumRow") {
                     LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        contentPadding = PaddingValues(horizontal = ScreenPadding),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(section.albums, key = { it.id.value }, contentType = { "albumTile" }) { album ->
@@ -157,7 +187,6 @@ internal fun HomeContent(
                                 title = album.name,
                                 subtitle = album.artist,
                                 coverArtId = album.coverArt?.value,
-                                size = 130.dp,
                                 subtitleLines = 1,
                                 onClick = { onOpenAlbum(album.id.value) },
                             )
@@ -169,77 +198,109 @@ internal fun HomeContent(
     }
 }
 
+/** Status line ("● MUSIC.HOME · ONLINE"), dot-matrix greeting, and the avatar that opens the settings. */
 @Composable
-private fun HomeHeader(onOpenSettings: () -> Unit) {
-    val greeting = remember {
-        when (LocalTime.now().hour) {
-            in 5..10 -> R.string.greeting_morning
-            in 11..17 -> R.string.greeting_day
-            in 18..22 -> R.string.greeting_evening
-            else -> R.string.greeting_night
-        }
-    }
+private fun HomeHeader(state: HomeUiState, onOpenSettings: () -> Unit) {
+    val greeting = stringResource(
+        remember {
+            when (LocalTime.now().hour) {
+                in 5..10 -> R.string.greeting_morning
+                in 11..17 -> R.string.greeting_day
+                in 18..22 -> R.string.greeting_evening
+                else -> R.string.greeting_night
+            }
+        },
+    )
+    val name = state.username?.replaceFirstChar { it.titlecase() }
+    val settingsLabel = stringResource(UiR.string.cd_settings)
     Row(
         Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(start = 16.dp, end = 4.dp, top = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(start = ScreenPadding, end = ScreenPadding, top = 24.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            stringResource(greeting),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = onOpenSettings) {
-            Icon(painterResource(UiR.drawable.ic_settings), contentDescription = stringResource(UiR.string.cd_settings))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Until the first refresh has finished, only the host: claiming "online" would be a guess.
+            val status = when (state.serverReachable) {
+                true -> stringResource(R.string.home_status_online)
+                false -> stringResource(R.string.home_status_offline)
+                null -> null
+            }
+            StatusLabel(
+                listOfNotNull(state.serverHost, status).joinToString(" · "),
+                dotColor = if (state.serverReachable == true) MaterialTheme.colorScheme.primary else NaviColors.TextTertiary,
+            )
+            Text(
+                if (name != null) stringResource(R.string.home_greeting_name, greeting, name) else greeting,
+                style = NaviType.dotTitle,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Box(
+            Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .clickable(role = Role.Button, onClick = onOpenSettings)
+                // Read as "Settings", not as the letter.
+                .clearAndSetSemantics { contentDescription = settingsLabel },
+            contentAlignment = Alignment.Center,
+        ) {
+            if (name != null) {
+                LetterAvatar(name)
+            } else {
+                Icon(painterResource(UiR.drawable.ic_settings), contentDescription = null)
+            }
         }
     }
 }
 
+/** A chart playlist as a wide card: cover, "NEW" badge, title, comment, last update, and a red play button. */
 @Composable
 private fun ChartCard(playlist: Playlist, onOpen: () -> Unit, onPlay: () -> Unit, modifier: Modifier = Modifier) {
-    ElevatedCard(modifier.fillMaxWidth()) {
-        Row(
-            Modifier.clickable(onClick = onOpen).padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CoverArt(playlist.coverArt?.value, 96.dp, Modifier.size(96.dp), shape = MaterialTheme.shapes.medium)
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                if (playlist.hasNewContent) {
-                    NewBadge()
-                    Spacer(Modifier.height(4.dp))
-                }
-                Text(playlist.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                playlist.comment?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                playlist.changed?.let { changed ->
-                    val relative = remember(changed) {
-                        DateUtils.getRelativeTimeSpanString(changed.toEpochMilliseconds()).toString()
-                    }
-                    Text(
-                        stringResource(R.string.home_updated, relative),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .background(NaviColors.Surface1)
+            .clickable(onClick = onOpen)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        CoverArt(playlist.coverArt?.value, 88.dp, Modifier.size(88.dp), shape = MaterialTheme.shapes.small)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (playlist.hasNewContent) NewBadge()
+            Text(playlist.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            playlist.comment?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = NaviColors.TextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Spacer(Modifier.width(8.dp))
-            FilledIconButton(onClick = onPlay, modifier = Modifier.size(48.dp)) {
-                Icon(painterResource(UiR.drawable.ic_play), contentDescription = stringResource(UiR.string.cd_play))
+            playlist.changed?.let { changed ->
+                val relative = remember(changed) {
+                    DateUtils.getRelativeTimeSpanString(changed.toEpochMilliseconds()).toString()
+                }
+                MonoLabel(stringResource(R.string.home_updated, relative))
             }
         }
+        AccentPlayButton(onClick = onPlay, size = 48.dp)
     }
 }
+
+/** Mono label on the right of a group's header. */
+private val PlaylistGroup.label: Int?
+    get() = when (this) {
+        PlaylistGroup.Charts -> R.string.home_label_auto
+        PlaylistGroup.ForYou -> R.string.home_label_smart
+        PlaylistGroup.Mine -> null
+    }
 
 private val PlaylistGroup.title: Int
     get() = when (this) {

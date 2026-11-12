@@ -1,30 +1,29 @@
 package dev.gruebling.navi.core.ui.theme
 
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+
+private val NaviShapes = Shapes(
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
 
 /**
- * App theme. Uses Material You dynamic color on Android 12+, the homelab palette otherwise.
- * Typography and shapes stay at the Material 3 defaults, which use the system font.
+ * App theme, after the "Dotwave × NothingOS" design: black, monochrome, one red accent; Space Grotesk with Doto
+ * and Space Mono for display text and labels (see [NaviType]). Dark only, no dynamic color: the look is the brand.
  */
 @Composable
-fun NaviTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+fun NaviTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = NaviColorScheme,
+        typography = NaviTypography,
+        shapes = NaviShapes,
+        content = content,
+    )
 }

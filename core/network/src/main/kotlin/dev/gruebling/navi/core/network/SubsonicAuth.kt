@@ -6,7 +6,7 @@ import java.security.SecureRandom
 /** Subsonic token authentication: t = md5(password + salt), with a fresh random salt per request. */
 object SubsonicAuth {
     const val API_VERSION = "1.16.1"
-    const val CLIENT_NAME = "Navi"
+    const val CLIENT_NAME = "Dotwave"
 
     private val random = SecureRandom()
     private val hex = "0123456789abcdef".toCharArray()

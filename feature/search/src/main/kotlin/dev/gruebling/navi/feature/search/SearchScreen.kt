@@ -1,16 +1,15 @@
 package dev.gruebling.navi.feature.search
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -25,8 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,8 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.ui.component.CoverTile
-import dev.gruebling.navi.core.ui.component.SectionHeader
+import dev.gruebling.navi.core.ui.component.MonoLabel
+import dev.gruebling.navi.core.ui.component.ScreenPadding
+import dev.gruebling.navi.core.ui.component.ScreenTitle
 import dev.gruebling.navi.core.ui.component.TrackRow
+import dev.gruebling.navi.core.ui.component.TrackRowInset
+import dev.gruebling.navi.core.ui.theme.NaviColors
 import kotlinx.coroutines.flow.filter
 import dev.gruebling.navi.core.ui.R as UiR
 
@@ -91,37 +94,22 @@ private fun SearchContent(
         snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { keyboard?.hide() }
     }
 
-    Column(modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
-        TextField(
-            value = state.query,
-            onValueChange = onQueryChange,
-            placeholder = { Text(stringResource(R.string.search_hint)) },
-            leadingIcon = { Icon(painterResource(UiR.drawable.ic_search), contentDescription = null) },
-            trailingIcon = {
-                if (state.query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange(""); focus.requestFocus() }) {
-                        Icon(painterResource(UiR.drawable.ic_close), stringResource(R.string.cd_clear_search))
-                    }
-                }
-            },
-            singleLine = true,
-            shape = CircleShape,
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
+    Column(modifier.fillMaxSize()) {
+        ScreenTitle(stringResource(R.string.search_title))
+        SearchField(
+            query = state.query,
+            onQueryChange = onQueryChange,
+            onSearch = { keyboard?.hide() },
+            onClear = { onQueryChange(""); focus.requestFocus() },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = ScreenPadding, vertical = 16.dp)
                 .focusRequester(focus),
         )
         // Thin line while the server is still searching; reserves its height so nothing jumps.
         Box(Modifier.fillMaxWidth().height(2.dp).padding(horizontal = 32.dp)) {
-            if (state.isSearching && state.query.isNotBlank()) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.isSearching && state.query.isNotBlank()) {
+                LinearProgressIndicator(Modifier.fillMaxWidth(), trackColor = NaviColors.Outline)
+            }
         }
 
         when {
@@ -148,15 +136,15 @@ private fun Results(
                 Text(
                     stringResource(R.string.search_offline),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = NaviColors.TextSecondary,
+                    modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),
                 )
             }
         }
         if (state.artists.isNotEmpty()) {
-            item(key = "artists-header", contentType = "header") { SectionHeader(stringResource(R.string.search_artists)) }
+            item(key = "artists-header", contentType = "header") { MonoHeader(stringResource(R.string.search_artists)) }
             item(key = "artists", contentType = "row") {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyRow(contentPadding = PaddingValues(horizontal = ScreenPadding), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.artists, key = { it.id.value }) { artist ->
                         CoverTile(
                             title = artist.name,
@@ -172,15 +160,14 @@ private fun Results(
             }
         }
         if (state.albums.isNotEmpty()) {
-            item(key = "albums-header", contentType = "header") { SectionHeader(stringResource(R.string.search_albums)) }
+            item(key = "albums-header", contentType = "header") { MonoHeader(stringResource(R.string.search_albums)) }
             item(key = "albums", contentType = "row") {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyRow(contentPadding = PaddingValues(horizontal = ScreenPadding), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.albums, key = { it.id.value }) { album ->
                         CoverTile(
                             title = album.name,
                             subtitle = album.artist,
                             coverArtId = album.coverArt?.value,
-                            size = 130.dp,
                             subtitleLines = 1,
                             onClick = { onOpenAlbum(album.id.value) },
                         )
@@ -189,9 +176,10 @@ private fun Results(
             }
         }
         if (state.songs.isNotEmpty()) {
-            item(key = "songs-header", contentType = "header") { SectionHeader(stringResource(R.string.search_songs)) }
+            item(key = "songs-header", contentType = "header") { MonoHeader(stringResource(R.string.search_songs)) }
             itemsIndexed(state.songs, key = { _, s -> "song-${s.id.value}" }, contentType = { _, _ -> "track" }) { index, song ->
                 TrackRow(
+                    modifier = Modifier.padding(horizontal = TrackRowInset),
                     title = song.title,
                     subtitle = listOfNotNull(song.artist, song.album).joinToString(" · "),
                     durationMs = song.durationSec * 1_000L,
@@ -208,6 +196,57 @@ private fun Results(
 @Composable
 private fun Message(text: String) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.TopCenter) {
-        Text(text, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium, color = NaviColors.TextSecondary)
     }
+}
+
+/** Mono caps section label ("ARTISTS"), as the design's search sections. */
+@Composable
+private fun MonoHeader(text: String) {
+    MonoLabel(text, Modifier.padding(start = ScreenPadding, end = ScreenPadding, top = 24.dp, bottom = 12.dp))
+}
+
+/** White pill search field with black text, as in the design. */
+@Composable
+private fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    BasicTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = NaviColors.Black),
+        cursorBrush = SolidColor(NaviColors.Black),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        modifier = modifier.fillMaxWidth(),
+        decorationBox = { field ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .background(NaviColors.White, CircleShape)
+                    .padding(start = 18.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(painterResource(UiR.drawable.ic_search), contentDescription = null, tint = NaviColors.Black)
+                Box(Modifier.weight(1f)) {
+                    if (query.isEmpty()) {
+                        Text(stringResource(R.string.search_hint), style = MaterialTheme.typography.bodyLarge, color = Color(0xFF6B6B6B), maxLines = 1)
+                    }
+                    field()
+                }
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = onClear) {
+                        Icon(painterResource(UiR.drawable.ic_close), stringResource(R.string.cd_clear_search), tint = NaviColors.Black)
+                    }
+                }
+            }
+        },
+    )
 }
