@@ -29,6 +29,11 @@ data class SongEntity(
     val size: Long?,
     val playCount: Long,
     val created: Long?,
+    // ReplayGain: gains in dB, peaks linear.
+    val rgTrackGain: Float? = null,
+    val rgAlbumGain: Float? = null,
+    val rgTrackPeak: Float? = null,
+    val rgAlbumPeak: Float? = null,
 )
 
 @Entity(tableName = "albums", indices = [Index("sortName"), Index("artistId"), Index("starredAt")])
@@ -60,6 +65,31 @@ data class ArtistEntity(
     val imageUrl: String?,
     val albumCount: Int,
     val starredAt: Long?,
+)
+
+/** getArtistInfo2 extras. Separate from [ArtistEntity] because the artist index sync replaces that table. */
+@Entity(tableName = "artist_info")
+data class ArtistInfoEntity(
+    @PrimaryKey val artistId: String,
+    /** Plain text, the Last.fm link already stripped. */
+    val biography: String?,
+    val lastFmUrl: String?,
+)
+
+/** Server order of similar artists (rows in `artists`). */
+@Entity(tableName = "artist_similar", primaryKeys = ["artistId", "position"])
+data class ArtistSimilarEntity(
+    val artistId: String,
+    val position: Int,
+    val similarId: String,
+)
+
+/** Server order of an artist's top songs (rows in `songs`). */
+@Entity(tableName = "artist_top_songs", primaryKeys = ["artistId", "position"])
+data class ArtistTopSongEntity(
+    val artistId: String,
+    val position: Int,
+    val songId: String,
 )
 
 @Entity(tableName = "playlists")

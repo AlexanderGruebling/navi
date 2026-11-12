@@ -60,6 +60,15 @@ class LyricsRepositoryTest {
     }
 
     @Test
+    fun `clear forgets cached lyrics (logout)`() = runTest {
+        server.on("getLyricsBySongId", structured(variant(true, lines = listOf(0L to "hi"))))
+        repo.lyrics(SongId("s1"), "A", "T").getOrThrow()
+        repo.clear()
+        repo.lyrics(SongId("s1"), "A", "T").getOrThrow()
+        assertEquals(2, server.requestsTo("getLyricsBySongId").size)
+    }
+
+    @Test
     fun `server without the extension falls back to getLyrics`() = runTest {
         server.on("getLyricsBySongId", error(0, "unknown endpoint"))
         server.on("getLyrics", ok(""""lyrics":{"artist":"A","title":"T","value":"[00:01.50]hello\n[00:04.00]world"}"""))

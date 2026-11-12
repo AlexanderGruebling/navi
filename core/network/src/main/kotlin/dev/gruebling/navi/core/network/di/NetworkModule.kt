@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.gruebling.navi.core.network.BuildConfig
+import dev.gruebling.navi.core.network.NoHttpsDowngradeInterceptor
 import dev.gruebling.navi.core.network.SubsonicApi
 import dev.gruebling.navi.core.network.SubsonicClientFactory
 import dev.gruebling.navi.core.network.SubsonicRequestInterceptor
@@ -32,6 +33,7 @@ object NetworkModule {
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(subsonic)
+            .addNetworkInterceptor(NoHttpsDowngradeInterceptor())
             .apply {
                 if (BuildConfig.DEBUG) {
                     addNetworkInterceptor(

@@ -7,6 +7,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
+import dev.gruebling.navi.core.download.Downloads
+import dev.gruebling.navi.core.model.DownloadTarget
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.model.PlaylistDetail
 import dev.gruebling.navi.core.model.PlaylistId
 import dev.gruebling.navi.core.model.Song
@@ -30,6 +33,7 @@ class PlaylistViewModel @AssistedInject constructor(
     private val repository: PlaylistRepository,
     private val playback: PlaybackController,
     private val clock: Clock,
+    private val downloads: Downloads,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -38,6 +42,7 @@ class PlaylistViewModel @AssistedInject constructor(
 
     private val id = PlaylistId(playlistId)
     private val refreshFailed = MutableStateFlow(false)
+    private val target = DownloadTarget.playlist(id)
 
     /**
      * The track list on screen. For smart playlists it is frozen once the user interacted (scrolled or played), so a
@@ -58,7 +63,8 @@ class PlaylistViewModel @AssistedInject constructor(
         shown,
         playback.state.map { it.current?.songId },
         refreshFailed,
-    ) { d: PlaylistDetail?, songs, currentSongId, failed ->
+        downloads.ui(target),
+    ) { d: PlaylistDetail?, songs, currentSongId, failed, download ->
         val playlist = d?.playlist
         CollectionUiState(
             header = playlist?.let {
@@ -77,6 +83,7 @@ class PlaylistViewModel @AssistedInject constructor(
             refreshFailed = failed,
             hasNewerContent = songs != null && songs != latest && latest.isNotEmpty(),
             isLoading = d == null || (songs.isNullOrEmpty() && (playlist?.songCount ?: 0) > 0),
+            download = download,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CollectionUiState())
 
@@ -109,5 +116,14 @@ class PlaylistViewModel @AssistedInject constructor(
         interacted = true
         val songs = shown.value.orEmpty()
         if (songs.isNotEmpty()) playback.playSongs(songs, shuffle = true)
+    }
+
+    fun download() = viewModelScope.toggleDownload(downloads, target)
+
+    fun removeDownload() = viewModelScope.removeDownload(downloads, target)
+
+    fun enqueue(index: Int, position: EnqueuePosition) {
+        interacted = true
+        shown.value?.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
     }
 }

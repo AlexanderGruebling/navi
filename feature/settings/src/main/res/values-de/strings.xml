@@ -11,13 +11,19 @@
     <string name="settings_quality_wifi">WLAN</string>
     <string name="settings_quality_mobile">Mobile Daten</string>
     <string name="settings_quality_note">Gilt ab dem nächsten Titel. Niedrigere Qualitäten wandelt der Server um.</string>
+    <string name="settings_replay_gain">Lautstärkeangleichung</string>
+    <string name="settings_replay_gain_note">Nutzt die ReplayGain-Tags deiner Dateien, damit Titel ähnlich laut spielen. Automatisch behält beim Hören eines ganzen Albums dessen eigene Dynamik.</string>
+    <string name="settings_replay_gain_off">Aus</string>
+    <string name="settings_replay_gain_track">Pro Titel</string>
+    <string name="settings_replay_gain_album">Pro Album</string>
+    <string name="settings_replay_gain_auto">Automatisch</string>
     <string name="settings_quality_original">Original (keine Umwandlung)</string>
     <string name="settings_quality_high">Hoch · MP3 320 kbps</string>
     <string name="settings_quality_medium">Mittel · Opus 192 kbps</string>
     <string name="settings_quality_low">Niedrig · Opus 128 kbps</string>
     <string name="settings_quality_saver">Datensparend · Opus 96 kbps</string>
     <string name="settings_playlists">Playlists auf Home</string>
-    <string name="settings_playlists_note">Tippe auf eine Playlist, um die Gruppe zu ändern oder sie anzuheften. Mit den Pfeilen änderst du die Reihenfolge in der Gruppe.</string>
+    <string name="settings_playlists_note">Tippe auf eine Playlist, um die Gruppe zu ändern oder sie anzuheften. Mit dem Griff ziehst du sie innerhalb der Gruppe an eine andere Stelle.</string>
     <string name="settings_group">Gruppe</string>
     <string name="settings_group_auto">Automatisch</string>
     <string name="settings_group_auto_is">Automatisch: %1$s</string>
@@ -32,4 +38,13 @@
     <string name="settings_version">Version %1$s</string>
     <string name="cd_move_up">Nach oben</string>
     <string name="cd_move_down">Nach unten</string>
+    <string name="cd_reorder">Ziehen zum Umsortieren</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_download_quality">Download-Qualität</string>
+    <string name="settings_download_mobile">Über mobile Daten laden</string>
+    <string name="settings_download_storage">Belegter Speicher</string>
+    <string name="settings_download_remove_all">Alle entfernen</string>
+    <string name="settings_download_remove_all_title">Alle Downloads entfernen?</string>
+    <string name="settings_download_remove_all_text">Alle heruntergeladenen Alben und Playlists werden von diesem Gerät gelöscht.</string>
+    <string name="settings_downloads_note">Die Qualität gilt für Titel, die ab jetzt geladen werden. Heruntergeladene Playlists bleiben mit dem Server abgeglichen.</string>
 </resources>

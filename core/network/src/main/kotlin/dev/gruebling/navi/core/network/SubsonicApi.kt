@@ -28,6 +28,16 @@ interface SubsonicApi {
     @GET("rest/getPlaylist")
     suspend fun getPlaylist(@Query("id") id: String): SubsonicEnvelope
 
+    /** Creates a playlist owned by the user. Since Subsonic 1.14 the answer contains the new playlist. */
+    @GET("rest/createPlaylist")
+    suspend fun createPlaylist(@Query("name") name: String, @Query("songId") songIds: List<String>): SubsonicEnvelope
+
+    @GET("rest/updatePlaylist")
+    suspend fun updatePlaylist(
+        @Query("playlistId") playlistId: String,
+        @Query("songIdToAdd") songIdsToAdd: List<String> = emptyList(),
+    ): SubsonicEnvelope
+
     /** [type]: newest, recent, frequent, random, alphabeticalByName, alphabeticalByArtist, starred, highest. */
     @GET("rest/getAlbumList2")
     suspend fun getAlbumList2(
@@ -44,6 +54,25 @@ interface SubsonicApi {
 
     @GET("rest/getArtist")
     suspend fun getArtist(@Query("id") id: String): SubsonicEnvelope
+
+    /** Biography and similar artists, which Navidrome takes from Last.fm. [includeNotPresent] false = only artists in the library. */
+    @GET("rest/getArtistInfo2")
+    suspend fun getArtistInfo2(
+        @Query("id") id: String,
+        @Query("count") count: Int = 12,
+        @Query("includeNotPresent") includeNotPresent: Boolean = false,
+    ): SubsonicEnvelope
+
+    /** The artist's most popular songs that are in the library (Last.fm ranking). Takes the artist's name, not its id. */
+    @GET("rest/getTopSongs")
+    suspend fun getTopSongs(@Query("artist") artist: String, @Query("count") count: Int = 10): SubsonicEnvelope
+
+    /**
+     * Songs similar to a song, album or artist ([id] may be any of them), for an instant mix. Navidrome builds the
+     * list from Last.fm similarity and returns only songs in the library.
+     */
+    @GET("rest/getSimilarSongs")
+    suspend fun getSimilarSongs(@Query("id") id: String, @Query("count") count: Int = 50): SubsonicEnvelope
 
     @GET("rest/search3")
     suspend fun search3(
@@ -73,7 +102,6 @@ interface SubsonicApi {
         @Query("artistId") artistIds: List<String> = emptyList(),
     ): SubsonicEnvelope
 
-    /** [submission] false = "now playing", true = counts as a play. [time] in ms since epoch. */
     /** OpenSubsonic `songLyrics` extension: structured (possibly synced) lyrics from the song's tags or sidecar files. */
     @GET("rest/getLyricsBySongId")
     suspend fun getLyricsBySongId(@Query("id") id: String): SubsonicEnvelope
@@ -82,6 +110,7 @@ interface SubsonicApi {
     @GET("rest/getLyrics")
     suspend fun getLyrics(@Query("artist") artist: String?, @Query("title") title: String?): SubsonicEnvelope
 
+    /** [submission] false = "now playing", true = counts as a play. [time] in ms since epoch. */
     @GET("rest/scrobble")
     suspend fun scrobble(
         @Query("id") songId: String,

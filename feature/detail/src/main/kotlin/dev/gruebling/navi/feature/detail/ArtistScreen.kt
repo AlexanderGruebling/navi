@@ -1,6 +1,8 @@
 package dev.gruebling.navi.feature.detail
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,56 +18,100 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.gruebling.navi.core.model.Artist
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
 import dev.gruebling.navi.core.ui.component.CoverTile
+import dev.gruebling.navi.core.ui.component.MessageToasts
+import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.ScreenPadding
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
 import dev.gruebling.navi.core.ui.component.StatusLabel
+import dev.gruebling.navi.core.ui.component.TrackRow
+import dev.gruebling.navi.core.ui.component.TrackRowInset
 import dev.gruebling.navi.core.ui.image.CoverArt
 import dev.gruebling.navi.core.ui.theme.NaviColors
 import dev.gruebling.navi.core.ui.theme.NaviType
+import kotlinx.collections.immutable.ImmutableList
 import dev.gruebling.navi.core.ui.R as UiR
 
 @Composable
-fun ArtistScreen(artistId: String, onBack: () -> Unit, onOpenAlbum: (String) -> Unit) {
+fun ArtistScreen(
+    artistId: String,
+    onBack: () -> Unit,
+    onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
+) {
     val viewModel = hiltViewModel<ArtistViewModel, ArtistViewModel.Factory>(key = "artist-$artistId") {
         it.create(artistId)
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ArtistContent(state, onBack, onOpenAlbum, onShuffle = viewModel::shuffleAll, onToggleStar = viewModel::toggleStar)
+    MessageToasts(viewModel.messages)
+    ArtistContent(
+        state = state,
+        onBack = onBack,
+        onOpenAlbum = onOpenAlbum,
+        onOpenArtist = onOpenArtist,
+        onShuffle = viewModel::shuffleAll,
+        onStartMix = viewModel::startMix,
+        onToggleStar = viewModel::toggleStar,
+        onPlayTopSong = viewModel::playTopSong,
+        onEnqueueTopSong = viewModel::enqueueTopSong,
+    )
 }
 
-/** Artist page: round image, name, album count, favorite + red "shuffle all", then the albums (oldest first). */
+/**
+ * Artist page: round image, name, album count, favorite + red "shuffle all", then top songs, the albums (oldest
+ * first), the biography and similar artists. The last three come from Last.fm via the server and are left out
+ * when it has none.
+ */
 @Composable
 private fun ArtistContent(
     state: ArtistUiState,
     onBack: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
     onShuffle: () -> Unit,
+    onStartMix: () -> Unit,
     onToggleStar: () -> Unit,
+    onPlayTopSong: (Int) -> Unit,
+    onEnqueueTopSong: (Int, EnqueuePosition) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
     val headerGone by remember { derivedStateOf { gridState.firstVisibleItemIndex > 0 } }
@@ -112,6 +158,13 @@ private fun ArtistContent(
                                 tint = if (starred) MaterialTheme.colorScheme.primary else NaviColors.TextSecondary,
                             )
                         }
+                        IconButton(onClick = onStartMix, enabled = artist != null && !state.isStartingMix) {
+                            if (state.isStartingMix) {
+                                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(painterResource(UiR.drawable.ic_mix), stringResource(UiR.string.cd_instant_mix))
+                            }
+                        }
                         Spacer(Modifier.width(8.dp))
                         AccentPlayButton(
                             onClick = onShuffle,
@@ -129,6 +182,16 @@ private fun ArtistContent(
                             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                         )
                     }
+                }
+            }
+            if (state.topSongs.isNotEmpty()) {
+                item(key = "top", span = { GridItemSpan(maxLineSpan) }, contentType = "top") {
+                    TopSongs(state.topSongs, state.currentSongId, onPlayTopSong, onEnqueueTopSong)
+                }
+            }
+            if (state.albums.isNotEmpty()) {
+                item(key = "albums-label", span = { GridItemSpan(maxLineSpan) }, contentType = "label") {
+                    SectionLabel(stringResource(R.string.detail_section_albums))
                 }
             }
             if (state.isLoading && state.albums.isEmpty()) {
@@ -149,6 +212,16 @@ private fun ArtistContent(
                     subtitleLines = 1,
                 )
             }
+            state.biography?.let { bio ->
+                item(key = "about", span = { GridItemSpan(maxLineSpan) }, contentType = "about") {
+                    About(bio, state.lastFmUrl)
+                }
+            }
+            if (state.similarArtists.isNotEmpty()) {
+                item(key = "similar", span = { GridItemSpan(maxLineSpan) }, contentType = "similar") {
+                    SimilarArtists(state.similarArtists, onOpenArtist)
+                }
+            }
         }
         DetailTopBar(
             label = stringResource(R.string.detail_label_artist),
@@ -157,4 +230,145 @@ private fun ArtistContent(
             onBack = onBack,
         )
     }
+}
+
+/** Collapsed number of top songs; the rest show after "Show all". */
+private const val TopSongsCollapsed = 5
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    MonoLabel(text, modifier.padding(top = 16.dp))
+}
+
+/** One grid item for all rows: the grid's 16 dp item spacing would pull track rows apart. */
+@Composable
+private fun TopSongs(
+    songs: ImmutableList<TrackUi>,
+    currentSongId: String?,
+    onPlay: (Int) -> Unit,
+    onEnqueue: (Int, EnqueuePosition) -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
+    val shown = if (expanded) songs.size else minOf(songs.size, TopSongsCollapsed)
+    Column(Modifier.fillMaxWidth()) {
+        SectionLabel(stringResource(R.string.detail_section_top_songs), Modifier.padding(bottom = 8.dp))
+        for (index in 0 until shown) {
+            val track = songs[index]
+            key(track.key) {
+                TrackRow(
+                    // TrackRow pads itself by 8 dp; let it reach into the screen padding so the text lines up.
+                    modifier = Modifier.bleed(ScreenPadding - TrackRowInset),
+                    title = track.title,
+                    subtitle = track.subtitle,
+                    durationMs = track.durationMs,
+                    coverArtId = track.coverArtId,
+                    isCurrent = track.songId == currentSongId,
+                    isStarred = track.starred,
+                    onClick = { onPlay(index) },
+                    onLongClick = { actionsFor = index },
+                )
+            }
+        }
+        if (songs.size > TopSongsCollapsed) {
+            MonoLabel(
+                stringResource(if (expanded) R.string.detail_show_less else R.string.detail_show_all),
+                color = NaviColors.White,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable { expanded = !expanded }
+                    .padding(vertical = 12.dp),
+            )
+        }
+    }
+    actionsFor?.let { index ->
+        songs.getOrNull(index)?.let { track ->
+            SongActionsSheet(
+                title = track.title,
+                subtitle = track.subtitle,
+                coverArtId = track.coverArtId,
+                onEnqueue = { position -> onEnqueue(index, position) },
+                onDismiss = { actionsFor = null },
+            )
+        }
+    }
+}
+
+/** Biography, a few lines until tapped. */
+@Composable
+private fun About(biography: String, lastFmUrl: String?) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var overflows by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
+    Column(Modifier.fillMaxWidth()) {
+        SectionLabel(stringResource(R.string.detail_section_about), Modifier.padding(bottom = 8.dp))
+        Text(
+            biography,
+            style = MaterialTheme.typography.bodyMedium,
+            color = NaviColors.TextSecondary,
+            maxLines = if (expanded) Int.MAX_VALUE else 5,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!expanded) overflows = it.hasVisualOverflow },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+                .clickable(enabled = overflows || expanded, onClickLabel = stringResource(R.string.detail_show_all)) {
+                    expanded = !expanded
+                },
+        )
+        if (lastFmUrl != null && (expanded || !overflows)) {
+            MonoLabel(
+                stringResource(R.string.detail_read_more_lastfm),
+                color = NaviColors.White,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable { runCatching { uriHandler.openUri(lastFmUrl) } }
+                    .padding(vertical = 12.dp),
+            )
+        }
+    }
+}
+
+/** Horizontal row of round artist images, reaching to the screen edges. */
+@Composable
+private fun SimilarArtists(artists: ImmutableList<Artist>, onOpen: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth()) {
+        SectionLabel(stringResource(R.string.detail_section_similar), Modifier.padding(bottom = 12.dp))
+        LazyRow(
+            modifier = Modifier.bleed(ScreenPadding),
+            contentPadding = PaddingValues(horizontal = ScreenPadding),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(artists, key = { it.id.value }) { artist ->
+                Column(
+                    Modifier
+                        .width(SimilarSize)
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable { onOpen(artist.id.value) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CoverArt(artist.coverArt?.value, SimilarSize, Modifier.size(SimilarSize), shape = CircleShape)
+                    Text(
+                        artist.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val SimilarSize = 96.dp
+
+/** Widens the element by [amount] on both sides, past its parent's padding. */
+private fun Modifier.bleed(amount: Dp): Modifier = layout { measurable, constraints ->
+    val extra = amount.roundToPx() * 2
+    val placeable = measurable.measure(
+        constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra),
+    )
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
 }

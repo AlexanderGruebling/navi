@@ -1,6 +1,8 @@
 package dev.gruebling.navi.ui
 
 import androidx.activity.compose.LocalActivity
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -68,12 +70,17 @@ import dev.gruebling.navi.feature.player.FullPlayerHost
 import dev.gruebling.navi.feature.player.MiniPlayer
 import dev.gruebling.navi.feature.search.SearchScreen
 import dev.gruebling.navi.feature.settings.SettingsScreen
+import dev.gruebling.navi.core.download.Downloads
+import dev.gruebling.navi.core.playback.PlaybackMessage
+import dev.gruebling.navi.core.playback.PlaybackMessages
 import dev.gruebling.navi.core.ui.R as UiR
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 internal interface PlaybackEntryPoint {
     fun playbackController(): PlaybackController
+    fun downloads(): Downloads
+    fun playbackMessages(): PlaybackMessages
 }
 
 @Composable
@@ -84,10 +91,13 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
     // without delaying startup.
     LaunchedEffect(Unit) {
         activity?.let {
-            EntryPointAccessors.fromApplication(it.applicationContext, PlaybackEntryPoint::class.java)
-                .playbackController().connect()
+            val entryPoint = EntryPointAccessors.fromApplication(it.applicationContext, PlaybackEntryPoint::class.java)
+            entryPoint.playbackController().connect()
+            // Picks up changed playlists and finishes interrupted downloads.
+            entryPoint.downloads().sync()
         }
     }
+    PlaybackMessageToasts()
 
     var playerExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -138,6 +148,7 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                         it.artistId,
                         onBack = { appState.goBack() },
                         onOpenAlbum = { id -> appState.navigate(AlbumRoute(id)) },
+                        onOpenArtist = { id -> appState.navigate(ArtistRoute(id)) },
                     )
                 }
                 entry<SettingsRoute> {
@@ -157,6 +168,7 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
         expanded = playerExpanded,
         onCollapse = { playerExpanded = false },
         onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+        onOpenArtist = { appState.navigate(ArtistRoute(it)) },
     )
     }
 }
@@ -216,3 +228,20 @@ private val TopLevelDestination.icon: Int
         TopLevelDestination.Search -> UiR.drawable.ic_search
         TopLevelDestination.Library -> UiR.drawable.ic_library
     }
+
+/** Toasts for what the playback service reports, on every screen. */
+@Composable
+private fun PlaybackMessageToasts() {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        val messages = EntryPointAccessors.fromApplication(context.applicationContext, PlaybackEntryPoint::class.java)
+            .playbackMessages().messages
+        messages.collect { message ->
+            val text = when (message) {
+                is PlaybackMessage.SkippedNotDownloaded ->
+                    context.resources.getQuantityString(UiR.plurals.skipped_not_downloaded, message.count, message.count)
+            }
+            Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+        }
+    }
+}

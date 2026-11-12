@@ -14,3 +14,17 @@ data class StreamingSettings(
     val unmetered: StreamQuality = StreamQuality.Original,
     val metered: StreamQuality = StreamQuality.Original,
 )
+
+/** Volume levelling with ReplayGain tags. */
+enum class ReplayGainMode {
+    Off,
+
+    /** Every song at the same loudness. */
+    Track,
+
+    /** Songs keep their loudness relative to the rest of their album. */
+    Album,
+
+    /** Album gain while the queue plays an album in order, track gain otherwise (mixes, playlists). */
+    Auto,
+}

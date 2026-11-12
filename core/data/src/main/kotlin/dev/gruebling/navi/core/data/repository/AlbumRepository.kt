@@ -4,9 +4,11 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import androidx.room.withTransaction
 import dev.gruebling.navi.core.data.mapping.toDomain
 import dev.gruebling.navi.core.data.mapping.toEntity
 import dev.gruebling.navi.core.data.util.suspendRunCatching
+import dev.gruebling.navi.core.database.NaviDatabase
 import dev.gruebling.navi.core.database.dao.AlbumDao
 import dev.gruebling.navi.core.database.dao.SongDao
 import dev.gruebling.navi.core.model.Album
@@ -31,6 +33,7 @@ class AlbumRepository @Inject constructor(
     private val albumDao: AlbumDao,
     private val songDao: SongDao,
     private val clock: Clock,
+    private val db: NaviDatabase,
 ) {
     fun observeAlbum(id: AlbumId): Flow<AlbumDetail?> =
         combine(albumDao.observe(id.value), songDao.observeByAlbum(id.value)) { album, songs ->
@@ -39,9 +42,11 @@ class AlbumRepository @Inject constructor(
 
     suspend fun refreshAlbum(id: AlbumId): Result<Unit> = suspendRunCatching {
         val remote = api.getAlbum(id.value).ok().album ?: error("Album ${id.value} missing in response")
-        val syncedAt = albumDao.get(id.value)?.syncedAt
-        albumDao.upsert(listOf(remote.toEntity(syncedAt)))
-        songDao.upsert(remote.song.map { it.toEntity() })
+        db.withTransaction {
+            val syncedAt = albumDao.get(id.value)?.syncedAt
+            albumDao.upsert(listOf(remote.toEntity(syncedAt)))
+            songDao.upsert(remote.song.map { it.toEntity() })
+        }
     }
 
     /** Home sections (recently played / added, most played). */

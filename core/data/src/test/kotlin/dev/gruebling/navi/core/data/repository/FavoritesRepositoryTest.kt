@@ -31,7 +31,7 @@ class FavoritesRepositoryTest {
         db = inMemoryDatabase()
         repo = FavoritesRepository(server.api, db, db.songDao(), db.albumDao(), db.artistDao(), FakeClock())
         server.on("getAlbum", ok(""""album":${album("al1", songs = listOf(song("s1"), song("s2")))}"""))
-        AlbumRepository(server.api, db.albumDao(), db.songDao(), FakeClock()).refreshAlbum(AlbumId("al1")).getOrThrow()
+        AlbumRepository(server.api, db.albumDao(), db.songDao(), FakeClock(), db).refreshAlbum(AlbumId("al1")).getOrThrow()
     }
 
     @After

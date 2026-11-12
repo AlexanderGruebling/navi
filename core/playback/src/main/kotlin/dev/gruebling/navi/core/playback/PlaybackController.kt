@@ -9,6 +9,8 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.gruebling.navi.core.data.di.ApplicationScope
+import dev.gruebling.navi.core.model.EnqueuePosition
+import dev.gruebling.navi.core.model.ReplayGain
 import dev.gruebling.navi.core.model.Song
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.QueueEntry
@@ -66,8 +68,13 @@ class PlaybackController @Inject constructor(
 
     fun bufferedPositionMs(): Long = controller?.bufferedPosition ?: 0L
 
-    fun playSongs(songs: List<Song>, startIndex: Int = 0, shuffle: Boolean = false) = command {
-        setMediaItems(songs.map(MediaItems::fromSong), if (shuffle) C.INDEX_UNSET else startIndex, 0)
+    /** Player volume set by volume levelling, and the tags it came from (debug output); main thread only. */
+    fun levelling(): Pair<Float, ReplayGain?> =
+        (controller?.volume ?: 1f) to controller?.currentMediaItem?.let(MediaItems::replayGain)
+
+    /** [fromMix]: the songs are an instant mix, so the queue keeps growing at the end (see MixExtender). */
+    fun playSongs(songs: List<Song>, startIndex: Int = 0, shuffle: Boolean = false, fromMix: Boolean = false) = command {
+        setMediaItems(songs.map { MediaItems.fromSong(it, fromMix) }, if (shuffle) C.INDEX_UNSET else startIndex, 0)
         shuffleModeEnabled = shuffle
         if (shuffle) seekToDefaultPosition(currentTimeline.getFirstWindowIndex(true).coerceAtLeast(0))
         prepare()
@@ -89,6 +96,34 @@ class PlaybackController @Inject constructor(
             Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
             else -> Player.REPEAT_MODE_OFF
         }
+    }
+
+    /**
+     * Keeps the current track playing and replaces everything before and after it with [songs], an instant mix.
+     * Shuffle goes off: a mix is already in order of similarity.
+     */
+    fun continueWithMix(songs: List<Song>) = command {
+        if (mediaItemCount == 0) {
+            setMediaItems(songs.map { MediaItems.fromSong(it, fromMix = true) })
+            prepare()
+            play()
+            return@command
+        }
+        val current = currentMediaItemIndex
+        val oldCount = mediaItemCount
+        // Add first, then remove: the queue never ends near the current song in between, which would make
+        // MixExtender fetch a batch for nothing.
+        shuffleModeEnabled = false
+        addMediaItems(songs.map { MediaItems.fromSong(it, fromMix = true) })
+        if (current + 1 < oldCount) removeMediaItems(current + 1, oldCount)
+        if (current > 0) removeMediaItems(0, current)
+        if (playbackState == Player.STATE_IDLE) prepare()
+        play()
+    }
+
+    fun enqueue(songs: List<Song>, position: EnqueuePosition) = when (position) {
+        EnqueuePosition.Next -> playNext(songs)
+        EnqueuePosition.End -> addToQueue(songs)
     }
 
     /** Inserts right after the current track. */

@@ -19,4 +19,28 @@
     </plurals>
     <string name="duration_hours_minutes">%1$d Std. %2$d Min.</string>
     <string name="duration_minutes">%1$d Min.</string>
+    <string name="cd_instant_mix">Mix starten</string>
+    <string name="mix_unavailable">Kein Mix verfügbar: Der Server kennt dazu keine ähnlichen Songs.</string>
+    <string name="mix_failed">Mix konnte nicht geladen werden. Prüfe die Verbindung und versuch es noch einmal.</string>
+    <string name="cd_song_actions">Weitere Optionen</string>
+    <string name="song_play_next">Als Nächstes spielen</string>
+    <string name="song_add_to_queue">Zur Warteschlange hinzufügen</string>
+    <string name="song_queued_next">Wird als Nächstes gespielt</string>
+    <string name="song_queued_end">Zur Warteschlange hinzugefügt</string>
+    <string name="cd_download">Herunterladen</string>
+    <string name="cd_remove_download">Download entfernen</string>
+    <string name="download_done">Heruntergeladen</string>
+    <string name="download_progress">Lädt %1$d / %2$d</string>
+    <string name="download_preparing">Download wird vorbereitet</string>
+    <string name="download_waiting_wifi">Wartet auf WLAN · %1$d / %2$d</string>
+    <string name="download_waiting_network">Wartet auf Netz · %1$d / %2$d</string>
+    <string name="download_incomplete">%1$d von %2$d geladen</string>
+    <string name="download_remove_title">Download entfernen?</string>
+    <string name="download_remove_text">Die Titel werden von diesem Gerät gelöscht, außer denen, die ein anderer Download noch enthält.</string>
+    <string name="download_remove">Entfernen</string>
+    <string name="action_cancel">Abbrechen</string>
+    <plurals name="skipped_not_downloaded">
+        <item quantity="one">Kein Netz: %d nicht heruntergeladener Titel übersprungen</item>
+        <item quantity="other">Kein Netz: %d nicht heruntergeladene Titel übersprungen</item>
+    </plurals>
 </resources>

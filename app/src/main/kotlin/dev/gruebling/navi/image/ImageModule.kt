@@ -12,15 +12,22 @@ import coil3.request.ImageResult
 import coil3.request.Options
 import coil3.request.crossfade
 import coil3.toUri
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
+import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.network.CredentialsSource
 import dev.gruebling.navi.core.network.SubsonicUrls
 import dev.gruebling.navi.core.ui.image.CoverArtRequest
+import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
 
@@ -68,4 +75,19 @@ private object CoverArtKeys : Interceptor {
             .build()
         return chain.withRequest(request).proceed()
     }
+}
+
+/** Empties Coil's memory and disk cache on logout: their keys hold cover ids only, not the server. */
+class ImageCacheCleaner @Inject constructor(private val imageLoader: Provider<ImageLoader>) : AccountCache {
+    override suspend fun clear() {
+        val loader = imageLoader.get()
+        loader.memoryCache?.clear()
+        withContext(Dispatchers.IO) { loader.diskCache?.clear() }
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class ImageBindings {
+    @Binds @IntoSet abstract fun imageCacheCleaner(impl: ImageCacheCleaner): AccountCache
 }

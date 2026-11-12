@@ -7,7 +7,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.AlbumRepository
+import dev.gruebling.navi.core.download.Downloads
 import dev.gruebling.navi.core.model.AlbumId
+import dev.gruebling.navi.core.model.DownloadTarget
+import dev.gruebling.navi.core.model.EnqueuePosition
 import dev.gruebling.navi.core.playback.PlaybackController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,6 +26,7 @@ class AlbumViewModel @AssistedInject constructor(
     @Assisted albumId: String,
     private val repository: AlbumRepository,
     private val playback: PlaybackController,
+    private val downloads: Downloads,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -32,12 +36,14 @@ class AlbumViewModel @AssistedInject constructor(
     private val id = AlbumId(albumId)
     private val refreshFailed = MutableStateFlow(false)
     private val detail = repository.observeAlbum(id)
+    private val target = DownloadTarget.album(id)
 
     val state: StateFlow<CollectionUiState> = combine(
         detail,
         playback.state.map { it.current?.songId },
         refreshFailed,
-    ) { d, currentSongId, failed ->
+        downloads.ui(target),
+    ) { d, currentSongId, failed, download ->
         val album = d?.album
         CollectionUiState(
             header = album?.let {
@@ -54,6 +60,7 @@ class AlbumViewModel @AssistedInject constructor(
             currentSongId = currentSongId,
             refreshFailed = failed,
             isLoading = d == null || (d.songs.isEmpty() && album?.songCount != 0),
+            download = download,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CollectionUiState())
 
@@ -72,6 +79,16 @@ class AlbumViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val songs = detail.first()?.songs.orEmpty()
             if (songs.isNotEmpty()) playback.playSongs(songs, shuffle = true)
+        }
+    }
+
+    fun download() = viewModelScope.toggleDownload(downloads, target)
+
+    fun removeDownload() = viewModelScope.removeDownload(downloads, target)
+
+    fun enqueue(index: Int, position: EnqueuePosition) {
+        viewModelScope.launch {
+            detail.first()?.songs?.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
         }
     }
 }

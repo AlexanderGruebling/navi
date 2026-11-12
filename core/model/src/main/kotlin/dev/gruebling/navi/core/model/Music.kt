@@ -18,7 +18,18 @@ data class Song(
     val suffix: String?,
     val bitRate: Int?,
     val playCount: Long,
+    val replayGain: ReplayGain? = null,
 )
+
+/** ReplayGain tags of a song (from the server): gains in dB, peaks as linear sample values (1.0 = full scale). */
+data class ReplayGain(
+    val trackGain: Float? = null,
+    val albumGain: Float? = null,
+    val trackPeak: Float? = null,
+    val albumPeak: Float? = null,
+) {
+    val isEmpty: Boolean get() = trackGain == null && albumGain == null
+}
 
 data class Album(
     val id: AlbumId,
@@ -49,6 +60,28 @@ data class Artist(
 data class AlbumDetail(val album: Album, val songs: List<Song>)
 
 data class ArtistDetail(val artist: Artist, val albums: List<Album>)
+
+/** Extras from Last.fm (via the server). Every part may be empty: not every server or artist has them. */
+data class ArtistInfo(
+    /** Plain text. */
+    val biography: String?,
+    val lastFmUrl: String?,
+    val topSongs: List<Song>,
+    val similarArtists: List<Artist>,
+) {
+    companion object {
+        val Empty = ArtistInfo(null, null, emptyList(), emptyList())
+    }
+}
+
+/** Where songs go when added to the queue without replacing it. */
+enum class EnqueuePosition {
+    /** Right after the playing song. */
+    Next,
+
+    /** At the end of the queue. */
+    End,
+}
 
 /** Server-side album lists used on Home. */
 enum class AlbumListType(val apiValue: String) {

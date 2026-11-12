@@ -1,5 +1,9 @@
 package dev.gruebling.navi.feature.library
 
+import android.text.format.Formatter
+import dev.gruebling.navi.core.model.DownloadTarget
+import dev.gruebling.navi.core.ui.component.downloadStatusText
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -80,6 +84,8 @@ import dev.gruebling.navi.core.ui.theme.NaviColors
 import dev.gruebling.navi.core.ui.theme.NaviType
 import kotlinx.collections.immutable.ImmutableList
 import dev.gruebling.navi.core.ui.R as UiR
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
+import dev.gruebling.navi.core.model.EnqueuePosition
 
 @Composable
 fun LibraryScreen(
@@ -98,6 +104,7 @@ fun LibraryScreen(
         onSortAlbums = viewModel::setAlbumSort,
         onRefresh = viewModel::refresh,
         onPlayFavorites = viewModel::playFavorites,
+        onEnqueueFavorite = viewModel::enqueueFavorite,
         onOpenPlaylist = onOpenPlaylist,
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
@@ -114,6 +121,7 @@ private fun LibraryContent(
     onSortAlbums: (AlbumSort) -> Unit,
     onRefresh: () -> Unit,
     onPlayFavorites: (startIndex: Int, shuffle: Boolean) -> Unit,
+    onEnqueueFavorite: (Int, EnqueuePosition) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
@@ -124,6 +132,7 @@ private fun LibraryContent(
     val albumsGrid = rememberLazyGridState()
     val artistsList = rememberLazyListState()
     val favoritesList = rememberLazyListState()
+    val downloadsList = rememberLazyListState()
 
     Column(modifier.fillMaxSize()) {
         ScreenTitle(stringResource(R.string.library_title))
@@ -144,9 +153,9 @@ private fun LibraryContent(
                 )
             }
         }
-        if (state.refreshFailed) {
+        if (state.refreshFailed || state.noNetwork) {
             Text(
-                stringResource(R.string.library_offline),
+                stringResource(if (state.noNetwork) R.string.library_no_network else R.string.library_offline),
                 style = MaterialTheme.typography.bodySmall,
                 color = NaviColors.TextSecondary,
                 modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),
@@ -161,8 +170,59 @@ private fun LibraryContent(
                 LibraryTab.Playlists -> PlaylistsTab(state.playlists, playlistsList, onOpenPlaylist)
                 LibraryTab.Albums -> AlbumsTab(albums, state.albumSort, albumsGrid, onSortAlbums, onOpenAlbum)
                 LibraryTab.Artists -> ArtistsTab(state, artistsList, onOpenArtist)
-                LibraryTab.Favorites -> FavoritesTab(state, favoritesList, onPlayFavorites, onOpenAlbum, onOpenArtist)
+                LibraryTab.Favorites -> FavoritesTab(state, favoritesList, onPlayFavorites, onEnqueueFavorite, onOpenAlbum, onOpenArtist)
+                LibraryTab.Downloads -> DownloadsTab(state.downloads, downloadsList, onOpenAlbum, onOpenPlaylist)
             }
+        }
+    }
+}
+
+@Composable
+private fun DownloadsTab(
+    downloads: DownloadsUi,
+    listState: LazyListState,
+    onOpenAlbum: (String) -> Unit,
+    onOpenPlaylist: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+        if (downloads.rows.isEmpty()) {
+            item(key = "empty") {
+                Text(
+                    stringResource(R.string.library_downloads_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = NaviColors.TextSecondary,
+                    modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),
+                )
+            }
+            return@LazyColumn
+        }
+        item(key = "summary") {
+            MonoLabel(
+                stringResource(
+                    R.string.library_downloads_summary,
+                    downloads.rows.size,
+                    Formatter.formatShortFileSize(context, downloads.totalBytes),
+                ),
+                modifier = Modifier.padding(start = ScreenPadding, end = ScreenPadding, bottom = 8.dp),
+            )
+        }
+        items(downloads.rows, key = { it.target.key }, contentType = { "download" }) { row ->
+            val kind = stringResource(
+                if (row.target.kind == DownloadTarget.Kind.Album) R.string.library_download_album else R.string.library_download_playlist,
+            )
+            LibraryRow(
+                title = row.name ?: "…",
+                meta = listOfNotNull(
+                    kind,
+                    downloadStatusText(row.status, downloads.allowMobileData),
+                    Formatter.formatShortFileSize(context, row.sizeBytes).takeIf { row.sizeBytes > 0 },
+                ).joinToString(" · "),
+                coverArtId = row.coverArt,
+                onClick = {
+                    if (row.target.kind == DownloadTarget.Kind.Album) onOpenAlbum(row.target.id) else onOpenPlaylist(row.target.id)
+                },
+            )
         }
     }
 }
@@ -342,9 +402,11 @@ private fun FavoritesTab(
     state: LibraryUiState,
     listState: LazyListState,
     onPlay: (startIndex: Int, shuffle: Boolean) -> Unit,
+    onEnqueue: (Int, EnqueuePosition) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
 ) {
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
     val empty = state.favoriteSongs.isEmpty() && state.favoriteAlbums.isEmpty() && state.favoriteArtists.isEmpty()
     if (empty && !state.isRefreshing) {
         Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.TopCenter) {
@@ -412,8 +474,20 @@ private fun FavoritesTab(
                     coverArtId = song.coverArt?.value,
                     isCurrent = song.id.value == state.currentSongId,
                     onClick = { onPlay(index, false) },
+                    onLongClick = { actionsFor = index },
                 )
             }
+        }
+    }
+    actionsFor?.let { index ->
+        state.favoriteSongs.getOrNull(index)?.let { song ->
+            SongActionsSheet(
+                title = song.title,
+                subtitle = song.artist,
+                coverArtId = song.coverArt?.value,
+                onEnqueue = { position -> onEnqueue(index, position) },
+                onDismiss = { actionsFor = null },
+            )
         }
     }
 }
@@ -424,6 +498,7 @@ private val LibraryTab.label: Int
         LibraryTab.Albums -> R.string.library_tab_albums
         LibraryTab.Artists -> R.string.library_tab_artists
         LibraryTab.Favorites -> R.string.library_tab_favorites
+        LibraryTab.Downloads -> R.string.library_tab_downloads
     }
 
 private val AlbumSort.label: Int

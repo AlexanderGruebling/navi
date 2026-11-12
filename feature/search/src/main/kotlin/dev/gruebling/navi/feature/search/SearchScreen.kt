@@ -53,6 +53,10 @@ import dev.gruebling.navi.core.ui.component.TrackRowInset
 import dev.gruebling.navi.core.ui.theme.NaviColors
 import kotlinx.coroutines.flow.filter
 import dev.gruebling.navi.core.ui.R as UiR
+import dev.gruebling.navi.core.ui.component.SongActionsSheet
+import dev.gruebling.navi.core.model.EnqueuePosition
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 
 @Composable
 fun SearchScreen(
@@ -66,6 +70,7 @@ fun SearchScreen(
         state = state,
         onQueryChange = viewModel::onQueryChange,
         onPlaySong = viewModel::playSong,
+        onEnqueueSong = viewModel::enqueueSong,
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
         modifier = modifier,
@@ -77,6 +82,7 @@ private fun SearchContent(
     state: SearchUiState,
     onQueryChange: (String) -> Unit,
     onPlaySong: (Int) -> Unit,
+    onEnqueueSong: (Int, EnqueuePosition) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -117,7 +123,7 @@ private fun SearchContent(
             !state.hasResults && !state.isSearching -> Message(
                 stringResource(if (state.remoteFailed) R.string.search_offline_no_results else R.string.search_no_results, state.query.trim()),
             )
-            else -> Results(state, listState, onPlaySong, onOpenAlbum, onOpenArtist)
+            else -> Results(state, listState, onPlaySong, onEnqueueSong, onOpenAlbum, onOpenArtist)
         }
     }
 }
@@ -127,9 +133,11 @@ private fun Results(
     state: SearchUiState,
     listState: LazyListState,
     onPlaySong: (Int) -> Unit,
+    onEnqueueSong: (Int, EnqueuePosition) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
 ) {
+    var actionsFor by remember { mutableStateOf<Int?>(null) }
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (state.remoteFailed) {
             item(key = "offline", contentType = "banner") {
@@ -187,8 +195,20 @@ private fun Results(
                     isCurrent = song.id.value == state.currentSongId,
                     isStarred = song.starred,
                     onClick = { onPlaySong(index) },
+                    onLongClick = { actionsFor = index },
                 )
             }
+        }
+    }
+    actionsFor?.let { index ->
+        state.songs.getOrNull(index)?.let { song ->
+            SongActionsSheet(
+                title = song.title,
+                subtitle = song.artist,
+                coverArtId = song.coverArt?.value,
+                onEnqueue = { position -> onEnqueueSong(index, position) },
+                onDismiss = { actionsFor = null },
+            )
         }
     }
 }

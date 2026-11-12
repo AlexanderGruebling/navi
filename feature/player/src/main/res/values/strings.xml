@@ -14,4 +14,22 @@
     <string name="cd_open_lyrics">Show lyrics</string>
     <string name="cd_close_lyrics">Close lyrics</string>
     <string name="cd_lyrics_seek">Play from this line</string>
+    <string name="cd_open_artist">Open artist</string>
+    <string name="player_queue_save">Save as playlist</string>
+    <string name="player_queue_save_title">Save queue as playlist</string>
+    <string name="player_queue_name">Name</string>
+    <string name="player_queue_default_name">Queue %1$s</string>
+    <string name="player_save">Save</string>
+    <string name="player_cancel">Cancel</string>
+    <string name="player_queue_saved">Queue saved as a playlist.</string>
+    <string name="player_queue_save_failed">Couldn\'t save the playlist. Check the connection and try again.</string>
+    <string name="player_queue_shuffle_hint">Shuffle is on. Turn it off to reorder.</string>
+    <string name="cd_reorder">Drag to reorder</string>
+    <string name="cd_move_up">Move up</string>
+    <string name="cd_move_down">Move down</string>
+    <string name="cd_clear_queue">Stop and clear queue</string>
+    <plurals name="player_queue_count">
+        <item quantity="one">%d song</item>
+        <item quantity="other">%d songs</item>
+    </plurals>
 </resources>

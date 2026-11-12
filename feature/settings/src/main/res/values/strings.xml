@@ -11,13 +11,19 @@
     <string name="settings_quality_wifi">Wi-Fi</string>
     <string name="settings_quality_mobile">Mobile data</string>
     <string name="settings_quality_note">Applies from the next track. Lower qualities are converted by the server.</string>
+    <string name="settings_replay_gain">Volume levelling</string>
+    <string name="settings_replay_gain_note">Uses the ReplayGain tags of your files, so songs play at a similar loudness. Automatic keeps an album\'s own dynamics while you listen to the whole album.</string>
+    <string name="settings_replay_gain_off">Off</string>
+    <string name="settings_replay_gain_track">Per song</string>
+    <string name="settings_replay_gain_album">Per album</string>
+    <string name="settings_replay_gain_auto">Automatic</string>
     <string name="settings_quality_original">Original (no conversion)</string>
     <string name="settings_quality_high">High · MP3 320 kbps</string>
     <string name="settings_quality_medium">Medium · Opus 192 kbps</string>
     <string name="settings_quality_low">Low · Opus 128 kbps</string>
     <string name="settings_quality_saver">Data saver · Opus 96 kbps</string>
     <string name="settings_playlists">Playlists on Home</string>
-    <string name="settings_playlists_note">Tap a playlist to change its group or pin it. Arrows change the order within a group.</string>
+    <string name="settings_playlists_note">Tap a playlist to change its group or pin it. Drag the handle to change the order within a group.</string>
     <string name="settings_group">Group</string>
     <string name="settings_group_auto">Automatic</string>
     <string name="settings_group_auto_is">Automatic: %1$s</string>
@@ -32,4 +38,13 @@
     <string name="settings_version">Version %1$s</string>
     <string name="cd_move_up">Move up</string>
     <string name="cd_move_down">Move down</string>
+    <string name="cd_reorder">Drag to reorder</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_download_quality">Download quality</string>
+    <string name="settings_download_mobile">Download over mobile data</string>
+    <string name="settings_download_storage">Storage used</string>
+    <string name="settings_download_remove_all">Remove all</string>
+    <string name="settings_download_remove_all_title">Remove all downloads?</string>
+    <string name="settings_download_remove_all_text">All downloaded albums and playlists are deleted from this device.</string>
+    <string name="settings_downloads_note">The quality applies to songs downloaded from now on. Downloaded playlists stay in sync with the server.</string>
 </resources>

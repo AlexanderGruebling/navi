@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.gruebling.navi.core.model.ReplayGainMode
 import dev.gruebling.navi.core.model.StreamQuality
 import dev.gruebling.navi.core.model.StreamingSettings
 import javax.inject.Inject
@@ -23,6 +24,15 @@ class StreamingSettingsStore @Inject constructor(
             metered = StreamQuality(p[MOBILE_BITRATE] ?: 0, p[MOBILE_FORMAT]),
         )
     }.distinctUntilChanged()
+
+    /** Volume levelling; [ReplayGainMode.Auto] until the user picks something else. */
+    val replayGainMode: Flow<ReplayGainMode> = dataStore.data.map { p ->
+        p[REPLAY_GAIN]?.let { name -> ReplayGainMode.entries.firstOrNull { it.name == name } } ?: ReplayGainMode.Auto
+    }.distinctUntilChanged()
+
+    suspend fun setReplayGainMode(mode: ReplayGainMode) {
+        dataStore.edit { it[REPLAY_GAIN] = mode.name }
+    }
 
     suspend fun update(settings: StreamingSettings) {
         dataStore.edit { p ->
@@ -43,5 +53,6 @@ class StreamingSettingsStore @Inject constructor(
         val WIFI_FORMAT = stringPreferencesKey("stream_wifi_format")
         val MOBILE_BITRATE = intPreferencesKey("stream_mobile_bitrate")
         val MOBILE_FORMAT = stringPreferencesKey("stream_mobile_format")
+        val REPLAY_GAIN = stringPreferencesKey("replay_gain_mode")
     }
 }

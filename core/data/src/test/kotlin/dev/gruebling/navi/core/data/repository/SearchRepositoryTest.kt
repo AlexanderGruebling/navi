@@ -40,7 +40,7 @@ class SearchRepositoryTest {
     @Test
     fun `local search finds cached songs and albums without asking the server`() = runTest {
         server.on("getAlbum", ok(""""album":${album("al1", name = "Blue Hour", songs = listOf(song("s1", title = "Blue"), song("s2", title = "Red")))}"""))
-        AlbumRepository(server.api, db.albumDao(), db.songDao(), FakeClock()).refreshAlbum(AlbumId("al1")).getOrThrow()
+        AlbumRepository(server.api, db.albumDao(), db.songDao(), FakeClock(), db).refreshAlbum(AlbumId("al1")).getOrThrow()
 
         val results = repo.searchLocal("blue")
 

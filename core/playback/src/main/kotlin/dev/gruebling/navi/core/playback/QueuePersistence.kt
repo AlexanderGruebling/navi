@@ -78,8 +78,15 @@ class QueuePersistence @Inject constructor(
             shuffle = player.shuffleModeEnabled,
             repeatMode = player.repeatMode,
         )
-        withContext(io) {
-            if (items != null) dao.replaceQueue(items, state) else dao.upsertQueueState(state)
+        try {
+            withContext(io) {
+                if (items != null) dao.replaceQueue(items, state) else dao.upsertQueueState(state)
+            }
+        } catch (e: Throwable) {
+            // Cancelled (a newer save replaced this one) or failed: the items weren't written, so the next save must
+            // write them, or the stored index would point into the old queue.
+            if (items != null) queueDirty = true
+            throw e
         }
     }
 

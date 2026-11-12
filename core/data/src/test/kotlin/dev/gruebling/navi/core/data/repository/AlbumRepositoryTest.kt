@@ -30,7 +30,7 @@ class AlbumRepositoryTest {
     fun setUp() {
         server = FakeSubsonicServer()
         db = inMemoryDatabase()
-        repo = AlbumRepository(server.api, db.albumDao(), db.songDao(), clock)
+        repo = AlbumRepository(server.api, db.albumDao(), db.songDao(), clock, db)
     }
 
     @After

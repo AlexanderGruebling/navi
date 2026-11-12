@@ -29,6 +29,9 @@ data class SubsonicResponse(
     val album: Album? = null,
     val artists: Artists? = null,
     val artist: Artist? = null,
+    val artistInfo2: ArtistInfo2? = null,
+    val topSongs: Songs? = null,
+    val similarSongs: Songs? = null,
     val searchResult3: SearchResult3? = null,
     val starred2: Starred2? = null,
     val randomSongs: Songs? = null,
@@ -145,6 +148,18 @@ data class Artist(
     val starred: String? = null,
     val sortName: String? = null,
     val album: List<Album> = emptyList(),
+)
+
+@Serializable
+data class ArtistInfo2(
+    /** HTML from Last.fm, usually ending in a "Read more on Last.fm" link. */
+    val biography: String? = null,
+    val musicBrainzId: String? = null,
+    val lastFmUrl: String? = null,
+    val smallImageUrl: String? = null,
+    val mediumImageUrl: String? = null,
+    val largeImageUrl: String? = null,
+    val similarArtist: List<Artist> = emptyList(),
 )
 
 /** A track ("Child" in the Subsonic spec). */

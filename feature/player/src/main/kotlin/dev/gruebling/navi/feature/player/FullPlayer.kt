@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.playback.model.PlayerState
 import dev.gruebling.navi.core.playback.model.RepeatMode
 import dev.gruebling.navi.core.ui.component.AccentPlayButton
+import dev.gruebling.navi.core.ui.component.MessageToasts
 import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.WaveformSeekBar
 import dev.gruebling.navi.core.ui.component.formatTrackTime
@@ -86,6 +87,7 @@ fun FullPlayerHost(
     expanded: Boolean,
     onCollapse: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
@@ -136,6 +138,7 @@ fun FullPlayerHost(
                 viewModel = viewModel,
                 onCollapse = onCollapse,
                 onOpenAlbum = { onOpenAlbum(it); onCollapse() },
+                onOpenArtist = { onOpenArtist(it); onCollapse() },
                 modifier = Modifier
                     .graphicsLayer {
                         translationY = offset.value
@@ -169,10 +172,13 @@ private fun FullPlayer(
     viewModel: PlayerViewModel,
     onCollapse: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val current = state.current
     val isStarred by viewModel.isCurrentStarred.collectAsStateWithLifecycle()
+    val isStartingMix by viewModel.isStartingMix.collectAsStateWithLifecycle()
+    MessageToasts(viewModel.messages)
     var showQueue by rememberSaveable { mutableStateOf(false) }
 
     // Polled position, read only by the seek bar's draw phase and the small time labels.
@@ -207,6 +213,8 @@ private fun FullPlayer(
                 IconButton(onClick = onCollapse) {
                     Icon(painterResource(UiR.drawable.ic_expand_more), stringResource(R.string.cd_collapse_player), Modifier.size(26.dp))
                 }
+                // Balances the mix button on the right, so the title stays centered.
+                Spacer(Modifier.size(48.dp))
                 Column(
                     Modifier
                         .weight(1f)
@@ -219,6 +227,13 @@ private fun FullPlayer(
                     MonoLabel(stringResource(R.string.player_now_playing))
                     current?.album?.let {
                         Text(it, style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                IconButton(onClick = viewModel::startMix, enabled = current != null && !isStartingMix) {
+                    if (isStartingMix) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(painterResource(UiR.drawable.ic_mix), stringResource(UiR.string.cd_instant_mix))
                     }
                 }
                 IconButton(onClick = { showQueue = true }) {
@@ -246,13 +261,20 @@ private fun FullPlayer(
                         // Long titles scroll slowly instead of being cut off.
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 2_000),
                     )
-                    // The album is in the header above (and opens from there).
+                    // The album is in the header above (and opens from there); the artist opens from here.
+                    val artistId = current?.artistId
                     Text(
                         current?.artist ?: stringResource(R.string.player_unknown_artist),
                         style = MaterialTheme.typography.bodyLarge,
                         color = NaviColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable(
+                                enabled = artistId != null,
+                                onClickLabel = stringResource(R.string.cd_open_artist),
+                            ) { artistId?.let(onOpenArtist) },
                     )
                 }
                 IconToggleButton(checked = isStarred, onCheckedChange = { viewModel.toggleStar() }, modifier = Modifier.offset(x = 10.dp)) {
@@ -310,10 +332,14 @@ private fun FullPlayer(
     }
 
     if (showQueue) {
+        val isSavingQueue by viewModel.isSavingQueue.collectAsStateWithLifecycle()
         QueueSheet(
             state = state,
+            isSaving = isSavingQueue,
             onSkipTo = viewModel::skipTo,
             onRemove = viewModel::remove,
+            onMove = viewModel::move,
+            onSave = viewModel::saveQueueAsPlaylist,
             onDismiss = { showQueue = false },
         )
     }

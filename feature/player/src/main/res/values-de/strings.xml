@@ -14,4 +14,22 @@
     <string name="cd_open_lyrics">Songtext anzeigen</string>
     <string name="cd_close_lyrics">Songtext schließen</string>
     <string name="cd_lyrics_seek">Ab dieser Zeile abspielen</string>
+    <string name="cd_open_artist">Interpret öffnen</string>
+    <string name="player_queue_save">Als Playlist speichern</string>
+    <string name="player_queue_save_title">Warteschlange als Playlist speichern</string>
+    <string name="player_queue_name">Name</string>
+    <string name="player_queue_default_name">Warteschlange %1$s</string>
+    <string name="player_save">Speichern</string>
+    <string name="player_cancel">Abbrechen</string>
+    <string name="player_queue_saved">Warteschlange als Playlist gespeichert.</string>
+    <string name="player_queue_save_failed">Playlist konnte nicht gespeichert werden. Prüfe die Verbindung und versuch es noch einmal.</string>
+    <string name="player_queue_shuffle_hint">Zufallswiedergabe ist an. Zum Umsortieren ausschalten.</string>
+    <string name="cd_reorder">Ziehen zum Umsortieren</string>
+    <string name="cd_move_up">Nach oben</string>
+    <string name="cd_move_down">Nach unten</string>
+    <string name="cd_clear_queue">Stoppen und Warteschlange leeren</string>
+    <plurals name="player_queue_count">
+        <item quantity="one">%d Song</item>
+        <item quantity="other">%d Songs</item>
+    </plurals>
 </resources>
