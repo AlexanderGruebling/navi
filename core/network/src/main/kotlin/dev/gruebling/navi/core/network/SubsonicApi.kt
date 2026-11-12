@@ -45,6 +45,18 @@ interface SubsonicApi {
     @GET("rest/getArtist")
     suspend fun getArtist(@Query("id") id: String): SubsonicEnvelope
 
+    /** Biography and similar artists, which Navidrome takes from Last.fm. [includeNotPresent] false = only artists in the library. */
+    @GET("rest/getArtistInfo2")
+    suspend fun getArtistInfo2(
+        @Query("id") id: String,
+        @Query("count") count: Int = 12,
+        @Query("includeNotPresent") includeNotPresent: Boolean = false,
+    ): SubsonicEnvelope
+
+    /** The artist's most popular songs that are in the library (Last.fm ranking). Takes the artist's name, not its id. */
+    @GET("rest/getTopSongs")
+    suspend fun getTopSongs(@Query("artist") artist: String, @Query("count") count: Int = 10): SubsonicEnvelope
+
     @GET("rest/search3")
     suspend fun search3(
         @Query("query") query: String,

@@ -6,6 +6,13 @@
     <string name="detail_label_playlist">Playlist</string>
     <string name="detail_label_album">Album</string>
     <string name="detail_label_artist">Interpret</string>
+    <string name="detail_section_top_songs">Top-Songs</string>
+    <string name="detail_section_albums">Alben</string>
+    <string name="detail_section_about">Über</string>
+    <string name="detail_section_similar">Ähnliche Interpreten</string>
+    <string name="detail_show_all">Alle anzeigen</string>
+    <string name="detail_show_less">Weniger anzeigen</string>
+    <string name="detail_read_more_lastfm">Mehr auf Last.fm</string>
     <plurals name="detail_album_count">
         <item quantity="one">%d Album</item>
         <item quantity="other">%d Alben</item>

@@ -138,6 +138,7 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                         it.artistId,
                         onBack = { appState.goBack() },
                         onOpenAlbum = { id -> appState.navigate(AlbumRoute(id)) },
+                        onOpenArtist = { id -> appState.navigate(ArtistRoute(id)) },
                     )
                 }
                 entry<SettingsRoute> {

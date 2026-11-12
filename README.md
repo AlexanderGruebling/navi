@@ -11,7 +11,8 @@ network is slow, and streams in a sensible quality on mobile data.
 - **Home**: playlists grouped into *Charts*, *Für dich* (smart playlists) and *Meine Playlists*, with a "new"
   badge when a playlist's tracks change.
 - **Library**: albums (paged grid, sort by recently added / name / artist), artists with letter headers,
-  favorites. Artist pages with "shuffle all".
+  favorites. Artist pages with "shuffle all", top songs, biography and similar artists (from Last.fm via the
+  server).
 - **Search**: local results instantly, server results after a short debounce.
 - **Player**: mini player plus a full player with a waveform seek bar, queue sheet, shuffle / repeat, favorite.
   Drag down or use predictive back to close.

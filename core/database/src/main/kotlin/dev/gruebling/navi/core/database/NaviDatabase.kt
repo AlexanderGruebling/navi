@@ -10,6 +10,9 @@ import dev.gruebling.navi.core.database.dao.SongDao
 import dev.gruebling.navi.core.database.entity.AlbumEntity
 import dev.gruebling.navi.core.database.entity.AlbumListEntryEntity
 import dev.gruebling.navi.core.database.entity.ArtistEntity
+import dev.gruebling.navi.core.database.entity.ArtistInfoEntity
+import dev.gruebling.navi.core.database.entity.ArtistSimilarEntity
+import dev.gruebling.navi.core.database.entity.ArtistTopSongEntity
 import dev.gruebling.navi.core.database.entity.PendingScrobbleEntity
 import dev.gruebling.navi.core.database.entity.QueueItemEntity
 import dev.gruebling.navi.core.database.entity.QueueStateEntity
@@ -27,6 +30,9 @@ import dev.gruebling.navi.core.database.entity.SongEntity
         SongEntity::class,
         AlbumEntity::class,
         ArtistEntity::class,
+        ArtistInfoEntity::class,
+        ArtistSimilarEntity::class,
+        ArtistTopSongEntity::class,
         PlaylistEntity::class,
         PlaylistSongEntity::class,
         PlaylistPrefsEntity::class,
@@ -35,7 +41,7 @@ import dev.gruebling.navi.core.database.entity.SongEntity
         QueueStateEntity::class,
         PendingScrobbleEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class NaviDatabase : RoomDatabase() {

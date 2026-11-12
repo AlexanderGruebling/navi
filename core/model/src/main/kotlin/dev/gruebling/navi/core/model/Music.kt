@@ -50,6 +50,19 @@ data class AlbumDetail(val album: Album, val songs: List<Song>)
 
 data class ArtistDetail(val artist: Artist, val albums: List<Album>)
 
+/** Extras from Last.fm (via the server). Every part may be empty: not every server or artist has them. */
+data class ArtistInfo(
+    /** Plain text. */
+    val biography: String?,
+    val lastFmUrl: String?,
+    val topSongs: List<Song>,
+    val similarArtists: List<Artist>,
+) {
+    companion object {
+        val Empty = ArtistInfo(null, null, emptyList(), emptyList())
+    }
+}
+
 /** Server-side album lists used on Home. */
 enum class AlbumListType(val apiValue: String) {
     RecentlyPlayed("recent"),

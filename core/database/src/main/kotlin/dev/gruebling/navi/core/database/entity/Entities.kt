@@ -62,6 +62,31 @@ data class ArtistEntity(
     val starredAt: Long?,
 )
 
+/** getArtistInfo2 extras. Separate from [ArtistEntity] because the artist index sync replaces that table. */
+@Entity(tableName = "artist_info")
+data class ArtistInfoEntity(
+    @PrimaryKey val artistId: String,
+    /** Plain text, the Last.fm link already stripped. */
+    val biography: String?,
+    val lastFmUrl: String?,
+)
+
+/** Server order of similar artists (rows in `artists`). */
+@Entity(tableName = "artist_similar", primaryKeys = ["artistId", "position"])
+data class ArtistSimilarEntity(
+    val artistId: String,
+    val position: Int,
+    val similarId: String,
+)
+
+/** Server order of an artist's top songs (rows in `songs`). */
+@Entity(tableName = "artist_top_songs", primaryKeys = ["artistId", "position"])
+data class ArtistTopSongEntity(
+    val artistId: String,
+    val position: Int,
+    val songId: String,
+)
+
 @Entity(tableName = "playlists")
 data class PlaylistEntity(
     @PrimaryKey val id: String,
