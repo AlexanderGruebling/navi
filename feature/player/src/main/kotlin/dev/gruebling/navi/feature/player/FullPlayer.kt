@@ -1,11 +1,18 @@
 package dev.gruebling.navi.feature.player
 
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -25,7 +32,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -83,7 +90,11 @@ fun FullPlayerHost(
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Collected even while the player is closed, so the lyrics are usually loaded before it opens.
+    val lyrics by viewModel.lyrics.collectAsStateWithLifecycle()
+    var showLyrics by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.isEmpty, expanded) { if (expanded && state.isEmpty) onCollapse() }
+    LaunchedEffect(expanded, lyrics) { if (!expanded || lyrics !is LyricsState.Available) showLyrics = false }
 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val heightPx = constraints.maxHeight.toFloat()
@@ -119,6 +130,9 @@ fun FullPlayerHost(
             }
             FullPlayer(
                 state = state,
+                lyrics = lyrics,
+                showLyrics = showLyrics,
+                onShowLyrics = { showLyrics = it },
                 viewModel = viewModel,
                 onCollapse = onCollapse,
                 onOpenAlbum = { onOpenAlbum(it); onCollapse() },
@@ -134,6 +148,8 @@ fun FullPlayerHost(
                     .draggable(
                         dragState,
                         Orientation.Vertical,
+                        // In the lyrics view, vertical drags belong to the lyrics.
+                        enabled = !showLyrics,
                         onDragStopped = { velocity ->
                             if (offset.value > heightPx * 0.2f || velocity > 1_500f) onCollapse()
                             else offset.animateTo(0f)
@@ -147,6 +163,9 @@ fun FullPlayerHost(
 @Composable
 private fun FullPlayer(
     state: PlayerState,
+    lyrics: LyricsState,
+    showLyrics: Boolean,
+    onShowLyrics: (Boolean) -> Unit,
     viewModel: PlayerViewModel,
     onCollapse: () -> Unit,
     onOpenAlbum: (String) -> Unit,
@@ -167,7 +186,14 @@ private fun FullPlayer(
         }
     }
 
+    val available = (lyrics as? LyricsState.Available)?.lyrics
+    // Recomposes when the line changes, not on every position tick. A small lead makes up for the 200 ms polling.
+    val currentLine by remember(available) {
+        derivedStateOf { available?.lineAt((scrubMs ?: position.longValue) + 250) ?: -1 }
+    }
+
     Surface(modifier.fillMaxSize().testTag("full_player"), color = NaviColors.Black) {
+      Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -200,10 +226,12 @@ private fun FullPlayer(
                 }
             }
 
-            Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
-                Box(Modifier.widthIn(max = 480.dp)) {
+            // The cover takes the space that's left: a square as large as fits (smaller when the lyrics panel shows).
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                val side = minOf(maxWidth, maxHeight, 480.dp)
+                Box(Modifier.size(side)) {
                     Crossfade(current?.coverArt, label = "cover") { cover ->
-                        CoverArt(cover, 360.dp, Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge)
+                        CoverArt(cover, 360.dp, Modifier.size(side), shape = MaterialTheme.shapes.extraLarge)
                     }
                     QueuePosition(state, Modifier.align(Alignment.TopEnd).padding(14.dp))
                 }
@@ -253,8 +281,32 @@ private fun FullPlayer(
 
             Spacer(Modifier.height(20.dp))
             Controls(state, viewModel)
-            Spacer(Modifier.height(32.dp))
+            AnimatedVisibility(visible = available != null, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                available?.let {
+                    LyricsPeek(it, currentLine, onOpen = { onShowLyrics(true) }, modifier = Modifier.padding(top = 20.dp))
+                }
+            }
+            Spacer(Modifier.height(if (available != null) 16.dp else 32.dp))
         }
+
+        AnimatedVisibility(
+            visible = showLyrics && available != null,
+            enter = slideInVertically { it } + fadeIn(),
+            exit = slideOutVertically { it } + fadeOut(),
+        ) {
+            available?.let {
+                LyricsView(
+                    lyrics = it,
+                    title = current?.title.orEmpty(),
+                    currentLine = currentLine,
+                    isPlaying = state.isPlaying,
+                    onSeek = { ms -> viewModel.seekTo(ms); position.longValue = ms },
+                    onTogglePlay = viewModel::togglePlayPause,
+                    onClose = { onShowLyrics(false) },
+                )
+            }
+        }
+      }
     }
 
     if (showQueue) {

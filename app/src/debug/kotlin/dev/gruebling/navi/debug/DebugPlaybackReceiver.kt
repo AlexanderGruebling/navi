@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import dev.gruebling.navi.core.data.di.ApplicationScope
+import dev.gruebling.navi.core.data.repository.LyricsRepository
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
 import dev.gruebling.navi.core.playback.PlaybackController
 import javax.inject.Inject
@@ -16,13 +17,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Debug-only remote control (no UI yet). Actions:
- *   navi.debug.PLAY_PLAYLIST --es name "FM4 Charts" [--ez shuffle true]
+ *   navi.debug.PLAY_PLAYLIST --es name "FM4 Charts" [--ez shuffle true] [--ei index 3]
  *   navi.debug.TOGGLE | NEXT | PREVIOUS | SEEK --el ms 60000 | STATE
+ *   navi.debug.LYRICS_SCAN --es name "FM4 Charts"   (logs which songs of the playlist have lyrics)
  */
 @AndroidEntryPoint
 class DebugPlaybackReceiver : BroadcastReceiver() {
     @Inject lateinit var playback: PlaybackController
     @Inject lateinit var playlists: PlaylistRepository
+    @Inject lateinit var lyrics: LyricsRepository
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -49,7 +52,24 @@ class DebugPlaybackReceiver : BroadcastReceiver() {
                 playlists.refreshPlaylist(playlist.id)
                 val songs = playlists.observePlaylist(playlist.id).first()?.songs.orEmpty()
                 Log.i(TAG, "playing '${playlist.name}' (${songs.size} songs)")
-                playback.playSongs(songs, shuffle = intent.getBooleanExtra("shuffle", false))
+                playback.playSongs(songs, startIndex = intent.getIntExtra("index", 0), shuffle = intent.getBooleanExtra("shuffle", false))
+            }
+            "navi.debug.LYRICS_SCAN" -> {
+                val name = intent.getStringExtra("name") ?: return
+                val playlist = playlists.observePlaylists().first().firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    ?: return Log.w(TAG, "no playlist '$name'").let { }
+                playlists.refreshPlaylist(playlist.id)
+                val songs = playlists.observePlaylist(playlist.id).first()?.songs.orEmpty()
+                songs.forEachIndexed { index, song ->
+                    val result = lyrics.lyrics(song.id, song.artist, song.title)
+                    val found = result.getOrNull()
+                    val summary = when {
+                        result.isFailure -> "error ${result.exceptionOrNull()?.message}"
+                        found == null -> "none"
+                        else -> "${if (found.synced) "synced" else "plain"} ${found.lines.size} lines"
+                    }
+                    Log.i(TAG, "lyrics #$index ${song.artist} – ${song.title}: $summary")
+                }
             }
             "navi.debug.TOGGLE" -> playback.togglePlayPause()
             "navi.debug.NEXT" -> playback.next()

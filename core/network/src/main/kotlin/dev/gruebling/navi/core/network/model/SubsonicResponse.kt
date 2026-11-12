@@ -32,9 +32,37 @@ data class SubsonicResponse(
     val searchResult3: SearchResult3? = null,
     val starred2: Starred2? = null,
     val randomSongs: Songs? = null,
+    val lyricsList: LyricsList? = null,
+    val lyrics: PlainLyrics? = null,
 ) {
     val isOk: Boolean get() = status == "ok"
 }
+
+/** OpenSubsonic `getLyricsBySongId`: one entry per language / variant. */
+@Serializable
+data class LyricsList(val structuredLyrics: List<StructuredLyrics> = emptyList())
+
+@Serializable
+data class StructuredLyrics(
+    val lang: String? = null,
+    val synced: Boolean = false,
+    /** Milliseconds; positive means the lines should show sooner. */
+    val offset: Long = 0,
+    val displayArtist: String? = null,
+    val displayTitle: String? = null,
+    val line: List<LyricsLineDto> = emptyList(),
+)
+
+@Serializable
+data class LyricsLineDto(
+    /** Milliseconds; absent for unsynced lyrics. */
+    val start: Long? = null,
+    val value: String = "",
+)
+
+/** Classic `getLyrics`. */
+@Serializable
+data class PlainLyrics(val artist: String? = null, val title: String? = null, val value: String? = null)
 
 @Serializable
 data class SubsonicError(val code: Int, val message: String? = null)

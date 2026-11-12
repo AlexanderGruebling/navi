@@ -24,6 +24,18 @@ Benchmarks and profile generation reuse a login made **by hand in the release bu
 
 There is no lint, ktlint, detekt or spotless setup.
 
+### Emulator
+
+An AVD `Dotwave_API_36` exists: Pixel 7 profile (1080×2400), Android 16 (API 36), Google APIs image, KVM accelerated. Use it when no phone is connected:
+
+```sh
+~/Android/Sdk/emulator/emulator -avd Dotwave_API_36 -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &   # headless; drop -no-window to see it
+ANDROID_SERIAL=emulator-5554 ./gradlew :app:installDebug
+~/Android/Sdk/platform-tools/adb -s emulator-5554 exec-out screencap -p > screen.png
+```
+
+`adb` is not on `PATH`; use `~/Android/Sdk/platform-tools/adb`. With a phone and the emulator both attached, pick one with `ANDROID_SERIAL` / `-s`.
+
 ## Architecture
 
 **Modules.** The `app/` module holds the Activity, the Navigation 3 host (`app/.../ui/NaviApp.kt`) and the Hilt application. `core/*` holds shared layers and `feature/*` holds the screens. Feature modules depend on `core` only, never on each other. All wiring between screens happens in `NaviApp.kt` through callbacks such as `onBack` and open-album lambdas.
@@ -68,7 +80,7 @@ There is no lint, ktlint, detekt or spotless setup.
 
 ## Debugging
 
-The debug build includes `DebugPlaybackReceiver` for driving playback from adb. Actions: `PLAY_PLAYLIST`, `TOGGLE`, `NEXT`, `PREVIOUS`, `SEEK` and `STATE`.
+The debug build includes `DebugPlaybackReceiver` for driving playback from adb. Actions: `PLAY_PLAYLIST` (optional `--ei index N`), `TOGGLE`, `NEXT`, `PREVIOUS`, `SEEK`, `STATE` and `LYRICS_SCAN` (logs which songs of a playlist have lyrics, tag `NaviDebug`).
 
 ```sh
 adb shell am broadcast -n dev.gruebling.navi.debug/dev.gruebling.navi.debug.DebugPlaybackReceiver -a navi.debug.PLAY_PLAYLIST --es name "'FM4 Charts'"
