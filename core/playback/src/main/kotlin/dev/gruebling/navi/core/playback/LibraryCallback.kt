@@ -34,7 +34,7 @@ class LibraryCallback @Inject constructor(
         mediaItems: MutableList<MediaItem>,
     ): ListenableFuture<MutableList<MediaItem>> = scope.future {
         val bare = mediaItems.filter { it.mediaMetadata.title == null }.map { it.mediaId }
-        val looked = bare.chunked(900).flatMap { songDao.getAll(it) }.associateBy { it.id }
+        val looked = songDao.getAll(bare).associateBy { it.id }
         mediaItems.mapNotNull { item ->
             if (item.mediaMetadata.title != null) MediaItems.withStreamUri(item)
             else looked[item.mediaId]?.let(MediaItems::fromEntity)

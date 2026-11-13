@@ -19,8 +19,11 @@ interface AlbumDao {
     @Query("SELECT * FROM albums WHERE id = :id")
     suspend fun get(id: String): AlbumEntity?
 
+    /** Any number of [ids]: asks in chunks, below SQLite's 999-variable limit on Android 11 and older. */
+    suspend fun getAll(ids: List<String>): List<AlbumEntity> = ids.chunked(MAX_IN_LIST).flatMap { getChunk(it) }
+
     @Query("SELECT * FROM albums WHERE id IN (:ids)")
-    suspend fun getAll(ids: List<String>): List<AlbumEntity>
+    suspend fun getChunk(ids: List<String>): List<AlbumEntity>
 
     @Query("SELECT * FROM albums ORDER BY sortName")
     fun pagingByName(): PagingSource<Int, AlbumEntity>

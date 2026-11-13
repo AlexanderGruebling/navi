@@ -77,4 +77,13 @@ class FavoritesRepositoryTest {
         // listed in getStarred2 without a date still counts as starred
         assertEquals(listOf("al9"), favorites.albums.map { it.id.value })
     }
+
+    @Test
+    fun `more starred albums than SQLite takes in one query`() = runTest {
+        val ids = (1..2_000).map { "al$it" }
+        server.on("getStarred2", ok(""""starred2":{"song":[],"album":[${ids.joinToString(",") { album(it) }}],"artist":[]}"""))
+        repo.refreshFavorites().getOrThrow() // looks up the albums it already knows, by id
+        repo.refreshFavorites().getOrThrow() // now all of them are known
+        assertEquals(2_000, repo.observeFavorites().first().albums.size)
+    }
 }

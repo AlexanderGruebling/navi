@@ -47,8 +47,11 @@ interface ArtistDao {
     suspend fun search(query: String, limit: Int): List<ArtistEntity>
 
     /** Callers must keep [ids] under SQLite's variable limit (999 on older Android). */
+    /** Any number of [ids]: asks in chunks, below SQLite's 999-variable limit on Android 11 and older. */
+    suspend fun getAll(ids: List<String>): List<ArtistEntity> = ids.chunked(MAX_IN_LIST).flatMap { getChunk(it) }
+
     @Query("SELECT * FROM artists WHERE id IN (:ids)")
-    suspend fun getAll(ids: List<String>): List<ArtistEntity>
+    suspend fun getChunk(ids: List<String>): List<ArtistEntity>
 
     // --- getArtistInfo2 / getTopSongs extras ---
 
