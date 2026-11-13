@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_player_label">Player</string>
+    <string name="widget_player_description">What\'s playing, with previous, play and next.</string>
+    <string name="widget_player_small_label">Player (small)</string>
+    <string name="widget_player_small_description">Cover, title and play/pause, with the song\'s progress in dots.</string>
+    <string name="widget_playlist_label">Playlist</string>
+    <string name="widget_playlist_description">Plays one of your playlists with one tap.</string>
+    <string name="widget_now_playing">Now playing</string>
+    <string name="widget_nothing_playing">Nothing playing</string>
+    <string name="widget_play_playlist">Play %1$s</string>
+    <string name="widget_choose_playlist">Pick a playlist</string>
+    <string name="widget_no_playlists">No playlists yet. Open Dotwave and log in first.</string>
+</resources>

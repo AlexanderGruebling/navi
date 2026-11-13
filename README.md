@@ -32,6 +32,10 @@ network is slow, and streams in a sensible quality on mobile data.
   songs that aren't downloaded are then skipped.
 - **Scrobbling** to the server the way Last.fm counts plays: "now playing" on start, a play after half the track
   or 4 minutes of actual listening.
+- **Own playlists**: add songs from any song's menu (or start a new playlist there); rename, reorder, remove
+  songs or delete a playlist you created. Imported and smart playlists stay read-only.
+- **Home screen widgets**: a 4×2 player, a 2×2 light player with the song's progress in dots, and a 4×1
+  playlist button that plays a chosen playlist. Play also resumes the last queue when the app isn't running.
 - **Settings**: quality presets, volume levelling, downloads, per-playlist group override, pinning and ordering, logout.
 
 UI strings are in English and German.
@@ -72,7 +76,7 @@ core/
   navigation/         Navigation 3 routes
   ui/                 Theme and fonts, shared components (tiles, chips, track rows, seek bar), image loading
 feature/
-  login/  home/  library/  search/  detail/  player/  settings/
+  login/  home/  library/  search/  detail/  player/  settings/  addtoplaylist/  widget/
 benchmark/            Macrobenchmarks and baseline profile generator
 build-logic/          Gradle convention plugins (Android, Compose, Hilt, feature modules)
 ```

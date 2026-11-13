@@ -40,6 +40,7 @@ class PlaybackService : MediaLibraryService() {
     @Inject lateinit var offlineSkipper: OfflineSkipper
     @Inject lateinit var streamResolver: StreamResolver
     @Inject lateinit var serverFeatures: ServerFeatures
+    @Inject lateinit var watchers: Set<@JvmSuppressWildcards PlayerWatcher>
 
     private val scope = MainScope()
     private var session: MediaLibrarySession? = null
@@ -65,6 +66,7 @@ class PlaybackService : MediaLibraryService() {
         mixExtender.attach(player, scope)
         replayGain.attach(player, scope)
         offlineSkipper.attach(player)
+        watchers.forEach { it.attach(player, scope) }
 
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -88,6 +90,7 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onDestroy() {
         session?.let {
+            watchers.forEach { w -> w.detach() }
             // Last chance to keep the position; a few ms of blocking IO at shutdown.
             runBlocking { queuePersistence.save() }
             it.player.release()

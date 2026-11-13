@@ -107,6 +107,8 @@ class QueuePersistence @Inject constructor(
         if (player.mediaItemCount > 0) return
         val saved = load() ?: return
         val state = withContext(io) { dao.queueState() }
+        // Something (a widget, a controller) started playback while we were loading: that wins.
+        if (player.mediaItemCount > 0) return
         player.setMediaItems(saved.mediaItems, saved.startIndex, saved.startPositionMs)
         state?.let {
             player.shuffleModeEnabled = it.shuffle

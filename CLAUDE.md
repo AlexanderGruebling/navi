@@ -50,6 +50,7 @@ There is no lint, ktlint, detekt or spotless setup.
 - `LibraryCallback` fills in URIs for items that controllers send and resolves bare ids from the cache. The Android Auto browse tree is a stub.
 - `TranscodeSeekingPlayer` wraps ExoPlayer because transcoded streams have no known length, so ExoPlayer treats them as live. On seek it restarts the item with the `timeOffset` stream parameter (needs the server's OpenSubsonic `transcodeOffset` extension, checked by `ServerFeatures`; without it transcoded songs are not seekable) and adds that offset to the positions it reports.
 - Offline downloads live in `core:download`: the downloaded albums/playlists in `DownloadSettingsStore` (DataStore, so Room's destructive migrations don't lose them), the songs as files in `filesDir/downloads/<songId>` (`DownloadFiles`; a file that exists is downloaded). `DownloadWorker` (WorkManager, Hilt worker factory set up in `NaviApplication`) runs `DownloadSync`, which only deletes unneeded files when every target was reloaded from the server. `StreamResolver` serves a downloaded file instead of the stream. Without network, `OfflineSkipper` jumps over songs that aren't downloaded.
+- `PlayerWatcher` (multibound set) lets other modules follow the player while the service runs; `feature:widget` uses it. `MediaButtonReceiver` is declared, so a headset or widget "play" starts the service and resumes the saved queue (`onPlaybackResumption`).
 - `Scrobbler` sends "now playing" on start. It submits a play after half the track or 4 minutes of actual listening.
 
 **Look.** The UI follows the "Dotwave × NothingOS" design (a Claude Design canvas): dark only, no dynamic color.
@@ -58,6 +59,7 @@ There is no lint, ktlint, detekt or spotless setup.
 - Fonts are bundled in `core/ui/src/main/res/font`, with their OFL licences in `assets/licenses`.
 - Prefer the shared pieces in `core/ui/.../component/Nothing.kt` (`ScreenTitle`, `NaviChip`, `AccentPlayButton`, `StatusLabel`, `ScreenPadding` = 20 dp) over raw Material components.
 - Icons are 1.75-stroke vectors on a 24 grid. Favorites are shown as a heart.
+- Widgets (`feature:widget`) are RemoteViews XML. Launchers inflate them in a restricted context that ignores font resources, so Doto titles are drawn as bitmaps (`DotText`) and other widget text uses system fonts.
 - Brand: name `app_name` lives in `core:ui` (not translated). The launcher icon (`app/.../drawable/ic_launcher_*.xml`) and `DotwaveLogo` draw the same 9×9 dot waveform; keep them in sync.
 
 **Compose stability.** `compose-stability.conf` marks `core.model.*`, `core.playback.model.*`, `kotlin.time` types and immutable collections as stable. Keep domain models immutable data classes, and use `kotlinx.collections.immutable` for lists in UI state.

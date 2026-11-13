@@ -19,8 +19,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import dagger.multibindings.Multibinds
 import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.playback.AudioCacheCleaner
+import dev.gruebling.navi.core.playback.PlayerWatcher
 import dev.gruebling.navi.core.playback.StreamResolver
 import java.io.File
 import javax.inject.Qualifier
@@ -83,4 +85,7 @@ abstract class PlaybackBindings {
     @Binds abstract fun cache(impl: SimpleCache): Cache
 
     @Binds @IntoSet abstract fun audioCacheCleaner(impl: AudioCacheCleaner): AccountCache
+
+    /** Empty unless a feature (the widgets) binds one. */
+    @Multibinds abstract fun playerWatchers(): Set<PlayerWatcher>
 }
