@@ -46,8 +46,9 @@ object SubsonicUrls {
 
     fun coverArtCacheKey(coverArtId: String, sizePx: Int): String = "cover:$coverArtId:${coverSizeFor(sizePx)}"
 
-    /** [maxBitRate] 0 = original. [format] "raw" = no transcoding. */
     /**
+     * [maxBitRate] 0 = original. [format] "raw" = no transcoding.
+     *
      * [timeOffsetSec] > 0 starts a transcoded stream later in the song (OpenSubsonic `transcodeOffset`); the server
      * ignores it for files it sends unchanged, so only use it when transcoding.
      */

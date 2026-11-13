@@ -28,7 +28,7 @@ class SearchRepositoryTest {
     fun setUp() {
         server = FakeSubsonicServer()
         db = inMemoryDatabase()
-        repo = SearchRepository(server.api, db.songDao(), db.albumDao(), db.artistDao())
+        repo = SearchRepository(server.api, db.songDao(), db.albumDao(), db.artistDao(), db)
     }
 
     @After

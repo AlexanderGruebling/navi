@@ -1,8 +1,10 @@
 package dev.gruebling.navi.core.data.repository
 
+import androidx.room.withTransaction
 import dev.gruebling.navi.core.data.mapping.toDomain
 import dev.gruebling.navi.core.data.mapping.toEntity
 import dev.gruebling.navi.core.data.util.suspendRunCatching
+import dev.gruebling.navi.core.database.NaviDatabase
 import dev.gruebling.navi.core.database.dao.AlbumDao
 import dev.gruebling.navi.core.database.dao.ArtistDao
 import dev.gruebling.navi.core.database.dao.SongDao
@@ -19,6 +21,7 @@ class SearchRepository @Inject constructor(
     private val songDao: SongDao,
     private val albumDao: AlbumDao,
     private val artistDao: ArtistDao,
+    private val db: NaviDatabase,
 ) {
     suspend fun searchLocal(query: String): SearchResults {
         val q = query.trim()
@@ -35,12 +38,16 @@ class SearchRepository @Inject constructor(
         if (q.isEmpty()) return@suspendRunCatching SearchResults.Empty
         val result = api.search3(q).ok().searchResult3 ?: return@suspendRunCatching SearchResults.Empty
         val artists = result.artist.map { it.toEntity() }
-        val existing = albumDao.getAll(result.album.map { it.id }).associateBy({ it.id }, { it.syncedAt })
-        val albums = result.album.map { it.toEntity(existing[it.id]) }
         val songs = result.song.map { it.toEntity() }
-        artistDao.upsert(artists)
-        albumDao.upsert(albums)
-        songDao.upsert(songs)
+        // One transaction: screens observing the cache update once, not three times.
+        val albums = db.withTransaction {
+            val existing = albumDao.getAll(result.album.map { it.id }).associateBy({ it.id }, { it.syncedAt })
+            result.album.map { it.toEntity(existing[it.id]) }.also { albums ->
+                artistDao.upsert(artists)
+                albumDao.upsert(albums)
+                songDao.upsert(songs)
+            }
+        }
         SearchResults(artists.map { it.toDomain() }, albums.map { it.toDomain() }, songs.map { it.toDomain() })
     }
 }

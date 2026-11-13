@@ -88,7 +88,13 @@ class Downloads @Inject constructor(
     /** Stops keeping [target]; deletes its songs unless another download still has them. */
     suspend fun remove(target: DownloadTarget) {
         settings.remove(target)
-        val stillWanted = settings.targets.first().flatMapTo(HashSet()) { library.songIds(it) }
+        val others = settings.targets.first()
+        if (others.isEmpty()) return files.deleteAll()
+        val otherSongs = others.map { library.songIds(it) }
+        // A download whose songs aren't in the cache (e.g. right after a schema change wiped it) would make its
+        // songs look unneeded. A full sync reloads everything first and deletes only then.
+        if (otherSongs.any { it.isEmpty() }) return sync()
+        val stillWanted = otherSongs.flatMapTo(HashSet()) { it }
         files.delete(library.songIds(target).filter { it !in stillWanted })
     }
 
