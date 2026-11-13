@@ -24,17 +24,7 @@ Benchmarks and profile generation reuse a login made **by hand in the release bu
 
 There is no lint, ktlint, detekt or spotless setup.
 
-### Emulator
-
-An AVD `Dotwave_API_36` exists: Pixel 7 profile (1080×2400), Android 16 (API 36), Google APIs image, KVM accelerated. Use it when no phone is connected:
-
-```sh
-~/Android/Sdk/emulator/emulator -avd Dotwave_API_36 -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &   # headless; drop -no-window to see it
-ANDROID_SERIAL=emulator-5554 ./gradlew :app:installDebug
-~/Android/Sdk/platform-tools/adb -s emulator-5554 exec-out screencap -p > screen.png
-```
-
-`adb` is not on `PATH`; use `~/Android/Sdk/platform-tools/adb`. With a phone and the emulator both attached, pick one with `ANDROID_SERIAL` / `-s`.
+`adb` is not on `PATH`; use `~/Android/Sdk/platform-tools/adb`. The emulator setup and adb playback controls are in the `device-debugging` skill.
 
 ## Architecture
 
@@ -79,14 +69,6 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :app:installDebug
 - Robolectric on JDK 21 needs extra `--add-opens`/`--add-exports` flags. The convention plugin sets them.
 - UI elements that the macrobenchmarks use have test tags, exposed as resource ids (`testTagsAsResourceId`). Keep them when you change those screens.
 
-## Debugging
-
-The debug build includes `DebugPlaybackReceiver` for driving playback from adb. Actions: `PLAY_PLAYLIST` (optional `--ei index N`), `TOGGLE`, `NEXT`, `PREVIOUS`, `SEEK`, `STATE` and `LYRICS_SCAN` (logs which songs of a playlist have lyrics, tag `NaviDebug`).
-
-```sh
-adb shell am broadcast -n dev.gruebling.navi.debug/dev.gruebling.navi.debug.DebugPlaybackReceiver -a navi.debug.PLAY_PLAYLIST --es name "'FM4 Charts'"
-```
-
-Debug logs use the logcat tag `NaviProbe`.
+## Strings
 
 UI strings exist in English and German. Add every new string to both.
