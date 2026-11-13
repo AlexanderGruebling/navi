@@ -30,6 +30,12 @@ object NaviUris {
     fun offsetSec(uri: Uri?): Long =
         if (uri?.scheme == SCHEME && uri.authority == STREAM) uri.getQueryParameter(OFFSET)?.toLongOrNull() ?: 0 else 0
 
+    /** The quality an offset stream ([streamFrom]) is pinned to; null for a normal stream. */
+    fun pinnedQuality(uri: Uri?): StreamQuality? {
+        if (offsetSec(uri) <= 0) return null
+        return StreamQuality(uri?.getQueryParameter(BITRATE)?.toIntOrNull() ?: 0, uri?.getQueryParameter(FORMAT))
+    }
+
     fun isStream(uri: Uri?): Boolean = uri?.scheme == SCHEME && uri.authority == STREAM
 
     internal const val OFFSET = "offset"
