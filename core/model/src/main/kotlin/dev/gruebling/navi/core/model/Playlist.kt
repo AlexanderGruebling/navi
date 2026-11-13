@@ -25,6 +25,11 @@ data class Playlist(
     val hasNewContent: Boolean,
     /** Group chosen by the user in settings; null = automatic ([group] then comes from tags, type and name). */
     val groupOverride: PlaylistGroup? = null,
+    /**
+     * The user may change name and songs. Not for smart playlists, other users' playlists, or ones Navidrome
+     * imported from playlist files (the server marks those read-only).
+     */
+    val isEditable: Boolean = false,
 )
 
 data class PlaylistDetail(

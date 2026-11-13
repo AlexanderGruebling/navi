@@ -10,4 +10,6 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:playback"))
     implementation(project(":core:download"))
+    implementation(libs.reorderable)
+    implementation(libs.androidx.activity.compose)
 }

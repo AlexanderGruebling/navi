@@ -34,6 +34,8 @@ class PlaylistSettingsStore @Inject constructor(
         ids.forEachIndexed { index, id -> all[id] = (all[id] ?: PlaylistSettings()).copy(sortOrder = index) }
     }
 
+    suspend fun remove(id: String) = edit { it.remove(id) }
+
     /** Forgets playlists the server no longer has. */
     suspend fun retainOnly(ids: Set<String>) = edit { it.keys.retainAll(ids) }
 

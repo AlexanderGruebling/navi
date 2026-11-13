@@ -17,4 +17,16 @@
         <item quantity="one">%d Album</item>
         <item quantity="other">%d Alben</item>
     </plurals>
+    <string name="playlist_edit">Playlist bearbeiten</string>
+    <string name="playlist_edit_name">Name</string>
+    <string name="playlist_edit_save">Speichern</string>
+    <string name="playlist_edit_cancel">Abbrechen</string>
+    <string name="playlist_edit_remove_song">%1$s entfernen</string>
+    <string name="playlist_edit_reorder">Ziehen zum Verschieben</string>
+    <string name="playlist_edit_delete">Playlist löschen</string>
+    <string name="playlist_edit_delete_title">„%1$s“ löschen?</string>
+    <string name="playlist_edit_delete_text">Die Playlist wird am Server gelöscht. Die Songs bleiben in deiner Bibliothek.</string>
+    <string name="playlist_edit_empty">Keine Songs mehr. Beim Speichern bleibt die Playlist leer bestehen.</string>
+    <string name="playlist_edit_save_failed">Playlist konnte nicht gespeichert werden</string>
+    <string name="playlist_edit_delete_failed">Playlist konnte nicht gelöscht werden</string>
 </resources>

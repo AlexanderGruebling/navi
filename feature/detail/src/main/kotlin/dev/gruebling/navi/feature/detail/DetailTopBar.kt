@@ -33,7 +33,14 @@ import dev.gruebling.navi.core.ui.R as UiR
  * [scrolled] is read in the draw phase only.
  */
 @Composable
-internal fun DetailTopBar(label: String, title: String, scrolled: () -> Float, onBack: () -> Unit) {
+internal fun DetailTopBar(
+    label: String,
+    title: String,
+    scrolled: () -> Float,
+    onBack: () -> Unit,
+    /** Optional button on the right, e.g. "edit"; 48 dp wide like the back button. */
+    action: (@Composable () -> Unit)? = null,
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -57,6 +64,6 @@ internal fun DetailTopBar(label: String, title: String, scrolled: () -> Float, o
             )
         }
         // Same width as the back button, so the label stays centered.
-        Spacer(Modifier.size(48.dp))
+        if (action != null) action() else Spacer(Modifier.size(48.dp))
     }
 }

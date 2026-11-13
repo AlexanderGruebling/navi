@@ -28,15 +28,28 @@ interface SubsonicApi {
     @GET("rest/getPlaylist")
     suspend fun getPlaylist(@Query("id") id: String): SubsonicEnvelope
 
-    /** Creates a playlist owned by the user. Since Subsonic 1.14 the answer contains the new playlist. */
+    /**
+     * Creates a playlist owned by the user, or with [playlistId] replaces that playlist's songs by [songIds]. Since
+     * Subsonic 1.14 the answer contains the playlist.
+     */
     @GET("rest/createPlaylist")
-    suspend fun createPlaylist(@Query("name") name: String, @Query("songId") songIds: List<String>): SubsonicEnvelope
+    suspend fun createPlaylist(
+        @Query("name") name: String? = null,
+        @Query("songId") songIds: List<String>,
+        @Query("playlistId") playlistId: String? = null,
+    ): SubsonicEnvelope
 
+    /** Renames, appends [songIdsToAdd] and removes the songs at [songIndexesToRemove] (positions before the change). */
     @GET("rest/updatePlaylist")
     suspend fun updatePlaylist(
         @Query("playlistId") playlistId: String,
+        @Query("name") name: String? = null,
         @Query("songIdToAdd") songIdsToAdd: List<String> = emptyList(),
+        @Query("songIndexToRemove") songIndexesToRemove: List<Int> = emptyList(),
     ): SubsonicEnvelope
+
+    @GET("rest/deletePlaylist")
+    suspend fun deletePlaylist(@Query("id") playlistId: String): SubsonicEnvelope
 
     /** [type]: newest, recent, frequent, random, alphabeticalByName, alphabeticalByArtist, starred, highest. */
     @GET("rest/getAlbumList2")

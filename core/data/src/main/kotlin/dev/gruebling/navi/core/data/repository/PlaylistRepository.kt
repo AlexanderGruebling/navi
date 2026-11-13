@@ -84,11 +84,40 @@ class PlaylistRepository @Inject constructor(
      */
     suspend fun createPlaylist(name: String, songIds: List<String>): Result<PlaylistId> = suspendRunCatching {
         val chunks = songIds.chunked(SONGS_PER_REQUEST)
-        val created = api.createPlaylist(name, chunks.firstOrNull().orEmpty()).ok().playlist
+        val created = api.createPlaylist(name = name, songIds = chunks.firstOrNull().orEmpty()).ok().playlist
             ?: error("createPlaylist returned no playlist")
         for (chunk in chunks.drop(1)) api.updatePlaylist(created.id, songIdsToAdd = chunk).ok()
         refreshPlaylists()
         PlaylistId(created.id)
+    }
+
+    /** Appends [songIds] to an editable playlist. */
+    suspend fun addSongs(id: PlaylistId, songIds: List<String>): Result<Unit> = suspendRunCatching {
+        for (chunk in songIds.chunked(SONGS_PER_REQUEST)) api.updatePlaylist(id.value, songIdsToAdd = chunk).ok()
+        refreshPlaylist(id).getOrThrow()
+    }
+
+    /**
+     * Saves an edited playlist: [songIds] become its songs in this order (reordered, some removed), and it gets
+     * [name] if that changed. The server replaces the content in one call; longer lists continue in chunks.
+     */
+    suspend fun saveEdit(id: PlaylistId, name: String, songIds: List<String>): Result<Unit> = suspendRunCatching {
+        val chunks = songIds.chunked(SONGS_PER_REQUEST)
+        api.createPlaylist(playlistId = id.value, songIds = chunks.firstOrNull().orEmpty()).ok()
+        for (chunk in chunks.drop(1)) api.updatePlaylist(id.value, songIdsToAdd = chunk).ok()
+        if (name != playlistDao.get(id.value)?.name) api.updatePlaylist(id.value, name = name).ok()
+        refreshPlaylist(id).getOrThrow()
+    }
+
+    /** Deletes the playlist on the server and from the cache. */
+    suspend fun deletePlaylist(id: PlaylistId): Result<Unit> = suspendRunCatching {
+        api.deletePlaylist(id.value).ok()
+        db.withTransaction {
+            playlistDao.delete(id.value)
+            playlistDao.clearSongs(id.value)
+            playlistDao.deletePrefs(id.value)
+        }
+        settingsStore.remove(id.value)
     }
 
     /**
@@ -177,6 +206,7 @@ class PlaylistRepository @Inject constructor(
             hasNewContent = !isSmart && p.contentSignature != null && seenSignature != null &&
                 p.contentSignature != seenSignature,
             groupOverride = override,
+            isEditable = !p.readonly && !isSmart,
         )
     }
 

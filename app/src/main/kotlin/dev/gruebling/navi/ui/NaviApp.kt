@@ -25,9 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,6 +63,8 @@ import dev.gruebling.navi.core.navigation.TopLevelDestination
 import dev.gruebling.navi.core.playback.PlaybackController
 import dev.gruebling.navi.core.ui.theme.NaviColors
 import dev.gruebling.navi.core.ui.theme.NaviType
+import dev.gruebling.navi.core.ui.component.LocalAddToPlaylist
+import dev.gruebling.navi.feature.addtoplaylist.AddToPlaylist
 import dev.gruebling.navi.feature.detail.AlbumScreen
 import dev.gruebling.navi.feature.detail.ArtistScreen
 import dev.gruebling.navi.feature.detail.PlaylistScreen
@@ -100,7 +104,13 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
     PlaybackMessageToasts()
 
     var playerExpanded by rememberSaveable { mutableStateOf(false) }
+    // Songs waiting for the "Add to playlist" sheet; any screen's song menu can ask for it.
+    var addToPlaylist by rememberSaveable { mutableStateOf<List<String>?>(null) }
 
+    // Remembered: a new lambda would recompose everything below the (static) provider.
+    val requestAddToPlaylist = remember { { songIds: List<String> -> addToPlaylist = songIds } }
+
+    CompositionLocalProvider(LocalAddToPlaylist provides requestAddToPlaylist) {
     Box(Modifier.fillMaxSize()) {
     Scaffold(
         containerColor = NaviColors.Black,
@@ -170,6 +180,8 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
         onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
         onOpenArtist = { appState.navigate(ArtistRoute(it)) },
     )
+    AddToPlaylist(songIds = addToPlaylist, onDismiss = { addToPlaylist = null })
+    }
     }
 }
 

@@ -45,17 +45,20 @@ class PlaylistRepositoryTest {
     private var mixSongs = listOf("s4", "s5")
     private var chartsChanged = "2026-11-09T08:53:18.396665254+01:00"
     private var serverPlaylists = listOf("charts", "mix", "repeat")
+    private var mineSongs = listOf("m1", "m2", "m3")
 
     private fun playlistJson(id: String): String = when (id) {
         "charts" -> """{"id":"charts","name":"FM4 Charts","comment":"Die aktuellen FM4 Charts","owner":"sheet","public":false,"readonly":true,"songCount":${chartsSongs.size},"duration":600,"changed":"$chartsChanged","coverArt":"pl-charts"}"""
         "mix" -> """{"id":"mix","name":"90s Mix","comment":"From Austropop to Eurodance.","owner":"sheet","readonly":true,"songCount":${mixSongs.size},"duration":400,"changed":"2026-11-10T16:34:44Z","validUntil":"2026-11-10T16:34:49Z"}"""
         "repeat" -> """{"id":"repeat","name":"On Repeat","comment":" The songs you just can't stop playing.","owner":"sheet","public":true,"readonly":true,"songCount":1,"duration":200,"changed":"2026-11-09T08:53:18Z","coverArt":"pl-repeat"}"""
+        "mine" -> """{"id":"mine","name":"Road trip","owner":"sheet","public":false,"songCount":${mineSongs.size},"duration":300,"changed":"2026-11-10T10:00:00Z"}"""
         else -> error(id)
     }
 
     private fun songsOf(id: String) = when (id) {
         "charts" -> chartsSongs
         "mix" -> mixSongs
+        "mine" -> mineSongs
         else -> listOf("s9")
     }
 
@@ -255,5 +258,65 @@ class PlaylistRepositoryTest {
         val sent = create.queryParameterValues("songId") + updates.flatMap { it.queryParameterValues("songIdToAdd") }
         assertEquals(ids, sent)
         assertEquals(1, server.requestsTo("getPlaylists").size) // the list is reloaded so Home shows it
+    }
+
+    @Test
+    fun `only the user's own plain playlists are editable`() = runTest {
+        serverPlaylists = listOf("charts", "mix", "mine")
+        repo.refreshPlaylists().getOrThrow()
+        val editable = repo.observePlaylists().first().associate { it.id.value to it.isEditable }
+        assertEquals(mapOf("charts" to false, "mix" to false, "mine" to true), editable)
+    }
+
+    @Test
+    fun `adding songs appends them and reloads the playlist`() = runTest {
+        serverPlaylists = listOf("mine")
+        repo.refreshPlaylists().getOrThrow()
+        server.on("updatePlaylist") { url ->
+            mineSongs = mineSongs + url.queryParameterValues("songIdToAdd").filterNotNull()
+            ok()
+        }
+        repo.addSongs(PlaylistId("mine"), listOf("x1", "x2")).getOrThrow()
+        val songs = repo.observePlaylist(PlaylistId("mine")).first()!!.songs.map { it.id.value }
+        assertEquals(listOf("m1", "m2", "m3", "x1", "x2"), songs)
+    }
+
+    @Test
+    fun `saving an edit replaces the songs in their new order and renames`() = runTest {
+        serverPlaylists = listOf("mine")
+        repo.refreshPlaylists().getOrThrow()
+        server.on("createPlaylist") { url ->
+            mineSongs = url.queryParameterValues("songId").filterNotNull()
+            ok()
+        }
+        server.on("updatePlaylist", ok())
+        repo.saveEdit(PlaylistId("mine"), "Long road trip", listOf("m3", "m1")).getOrThrow()
+
+        val replace = server.requestsTo("createPlaylist").single()
+        assertEquals("mine", replace.queryParameter("playlistId"))
+        assertEquals(null, replace.queryParameter("name"))
+        assertEquals("Long road trip", server.requestsTo("updatePlaylist").single().queryParameter("name"))
+        assertEquals(listOf("m3", "m1"), repo.observePlaylist(PlaylistId("mine")).first()!!.songs.map { it.id.value })
+    }
+
+    @Test
+    fun `saving without a new name doesn't rename`() = runTest {
+        serverPlaylists = listOf("mine")
+        repo.refreshPlaylists().getOrThrow()
+        server.on("createPlaylist", ok())
+        repo.saveEdit(PlaylistId("mine"), "Road trip", listOf("m1")).getOrThrow()
+        assertTrue(server.requestsTo("updatePlaylist").isEmpty())
+    }
+
+    @Test
+    fun `deleting removes the playlist and its settings`() = runTest {
+        serverPlaylists = listOf("mix", "mine")
+        repo.refreshPlaylists().getOrThrow()
+        repo.updateSettings(PlaylistId("mine"), PlaylistSettings(pinned = true))
+        server.on("deletePlaylist", ok())
+        repo.deletePlaylist(PlaylistId("mine")).getOrThrow()
+        assertEquals(listOf("mix"), repo.observePlaylists().first().map { it.id.value })
+        assertTrue(settings.settings.first().isEmpty())
+        assertEquals("mine", server.requestsTo("deletePlaylist").single().queryParameter("id"))
     }
 }

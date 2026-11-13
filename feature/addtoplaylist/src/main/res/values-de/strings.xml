@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="add_to_playlist_title">Zu Playlist hinzufügen</string>
+    <string name="add_to_playlist_new">Neue Playlist…</string>
+    <string name="add_to_playlist_none">Hier erscheinen Playlists, die du in Dotwave erstellt hast. Am Server importierte Playlists lassen sich nicht ändern.</string>
+    <string name="add_to_playlist_name">Name</string>
+    <string name="add_to_playlist_create">Erstellen</string>
+    <string name="add_to_playlist_cancel">Abbrechen</string>
+    <string name="add_to_playlist_added">Zu %1$s hinzugefügt</string>
+    <string name="add_to_playlist_failed">Konnte nicht zu %1$s hinzufügen</string>
+</resources>

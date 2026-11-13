@@ -487,6 +487,7 @@ private fun FavoritesTab(
                 coverArtId = song.coverArt?.value,
                 onEnqueue = { position -> onEnqueue(index, position) },
                 onDismiss = { actionsFor = null },
+                songId = song.id.value,
             )
         }
     }

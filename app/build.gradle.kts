@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":feature:detail"))
     implementation(project(":feature:player"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:addtoplaylist"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

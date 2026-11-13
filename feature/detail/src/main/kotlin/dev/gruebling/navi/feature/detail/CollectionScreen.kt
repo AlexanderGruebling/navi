@@ -72,6 +72,7 @@ internal fun CollectionScreen(
     onRemoveDownload: () -> Unit,
     onShowNewer: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
+    onEdit: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     var actionsFor by remember { mutableStateOf<Int?>(null) }
@@ -141,6 +142,7 @@ internal fun CollectionScreen(
                     coverArtId = track.coverArtId ?: state.header?.coverArtId,
                     onEnqueue = { position -> onEnqueue(index, position) },
                     onDismiss = { actionsFor = null },
+                    songId = track.songId,
                 )
             }
         }
@@ -158,6 +160,15 @@ internal fun CollectionScreen(
             title = state.header?.title.orEmpty(),
             scrolled = { barAlpha },
             onBack = onBack,
+            action = if (state.canEdit) {
+                {
+                    IconButton(onClick = onEdit) {
+                        Icon(painterResource(UiR.drawable.ic_edit), contentDescription = stringResource(R.string.playlist_edit))
+                    }
+                }
+            } else {
+                null
+            },
         )
     }
 }

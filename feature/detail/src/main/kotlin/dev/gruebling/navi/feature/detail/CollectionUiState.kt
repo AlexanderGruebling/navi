@@ -41,6 +41,18 @@ data class CollectionUiState(
     val hasNewerContent: Boolean = false,
     val isLoading: Boolean = true,
     val download: DownloadUi = DownloadUi(),
+    /** The user's own playlist: name and songs can be edited. */
+    val canEdit: Boolean = false,
+)
+
+/** A playlist being edited: changes stay local until [PlaylistViewModel.saveEdit]. */
+@Immutable
+data class PlaylistEditState(
+    val name: String,
+    /** Keys stay those of the original rows, so moved rows keep their identity. */
+    val tracks: ImmutableList<TrackUi>,
+    val isSaving: Boolean = false,
+    val changed: Boolean = false,
 )
 
 @Immutable

@@ -28,7 +28,7 @@ There is no lint, ktlint, detekt or spotless setup.
 
 ## Architecture
 
-**Modules.** The `app/` module holds the Activity, the Navigation 3 host (`app/.../ui/NaviApp.kt`) and the Hilt application. `core/*` holds shared layers and `feature/*` holds the screens. Feature modules depend on `core` only, never on each other. All wiring between screens happens in `NaviApp.kt` through callbacks such as `onBack` and open-album lambdas.
+**Modules.** The `app/` module holds the Activity, the Navigation 3 host (`app/.../ui/NaviApp.kt`) and the Hilt application. `core/*` holds shared layers and `feature/*` holds the screens. Feature modules depend on `core` only, never on each other. All wiring between screens happens in `NaviApp.kt` through callbacks such as `onBack` and open-album lambdas. The one exception is "Add to playlist": `SongActionsSheet` is used on many screens, so `NaviApp` provides `LocalAddToPlaylist` (core:ui) once and shows the `feature:addtoplaylist` picker itself.
 
 **Convention plugins** (`build-logic/convention`) set up every module: `navi.android.library`, `navi.android.compose`, `navi.hilt`, `navi.android.feature` and `navi.jvm.library`. `navi.android.feature` already pulls in `core:model`, `core:navigation`, `core:ui`, lifecycle/ViewModel/Hilt-Compose, navigation3 runtime and immutable collections. A new feature module only adds what it needs beyond that, usually `core:data` and/or `core:playback`. Versions live in `gradle/libs.versions.toml`.
 

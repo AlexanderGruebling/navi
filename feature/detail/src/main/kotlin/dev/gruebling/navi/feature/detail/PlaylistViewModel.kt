@@ -26,6 +26,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import dev.gruebling.navi.core.model.DownloadStatus
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.Channel
 
 @HiltViewModel(assistedFactory = PlaylistViewModel.Factory::class)
 class PlaylistViewModel @AssistedInject constructor(
@@ -84,6 +90,7 @@ class PlaylistViewModel @AssistedInject constructor(
             hasNewerContent = songs != null && songs != latest && latest.isNotEmpty(),
             isLoading = d == null || (songs.isNullOrEmpty() && (playlist?.songCount ?: 0) > 0),
             download = download,
+            canEdit = playlist?.isEditable == true,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CollectionUiState())
 
@@ -125,5 +132,73 @@ class PlaylistViewModel @AssistedInject constructor(
     fun enqueue(index: Int, position: EnqueuePosition) {
         interacted = true
         shown.value?.getOrNull(index)?.let { playback.enqueue(listOf(it), position) }
+    }
+
+    // Editing (own playlists only).
+
+    private val _editor = MutableStateFlow<PlaylistEditState?>(null)
+    val editor: StateFlow<PlaylistEditState?> = _editor.asStateFlow()
+
+    private val _messages = Channel<Int>(Channel.BUFFERED)
+    val messages: Flow<Int> = _messages.receiveAsFlow()
+
+    fun startEdit() {
+        val s = state.value
+        if (!s.canEdit) return
+        interacted = true
+        _editor.value = PlaylistEditState(name = s.header?.title.orEmpty(), tracks = latest.toTrackUi(showCovers = true))
+    }
+
+    fun cancelEdit() {
+        _editor.value = null
+    }
+
+    fun renameInEdit(name: String) = _editor.update { it?.copy(name = name, changed = true) }
+
+    fun moveInEdit(fromKey: Any, toKey: Any) = _editor.update { e ->
+        val tracks = e?.tracks ?: return@update e
+        val from = tracks.indexOfFirst { it.key == fromKey }
+        val to = tracks.indexOfFirst { it.key == toKey }
+        if (from < 0 || to < 0) return@update e
+        e.copy(tracks = tracks.toMutableList().apply { add(to, removeAt(from)) }.toImmutableList(), changed = true)
+    }
+
+    fun removeInEdit(key: String) = _editor.update { e ->
+        e?.copy(tracks = e.tracks.filterNot { it.key == key }.toImmutableList(), changed = true)
+    }
+
+    fun saveEdit() {
+        val e = _editor.value ?: return
+        if (e.isSaving || e.name.isBlank()) return
+        if (!e.changed) return cancelEdit()
+        _editor.value = e.copy(isSaving = true)
+        viewModelScope.launch {
+            val saved = repository.saveEdit(id, e.name.trim(), e.tracks.map { it.songId }).isSuccess
+            if (saved) {
+                _editor.value = null
+                downloads.sync() // a downloaded playlist gets its new songs
+            } else {
+                _editor.update { it?.copy(isSaving = false) }
+                _messages.send(R.string.playlist_edit_save_failed)
+            }
+        }
+    }
+
+    /** Deletes the playlist (and its download); [onDeleted] leaves the screen. */
+    fun deletePlaylist(onDeleted: () -> Unit) {
+        val downloaded = state.value.download.status != DownloadStatus.None
+        viewModelScope.launch {
+            if (repository.deletePlaylist(id).isSuccess) {
+                if (downloaded) {
+                    downloads.remove(target)
+                    // The cache no longer knows the songs; a sync deletes the files nothing else needs.
+                    downloads.sync()
+                }
+                _editor.value = null
+                onDeleted()
+            } else {
+                _messages.send(R.string.playlist_edit_delete_failed)
+            }
+        }
     }
 }

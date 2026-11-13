@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +31,16 @@ import dev.gruebling.navi.core.ui.R
 import dev.gruebling.navi.core.ui.image.CoverArt
 import dev.gruebling.navi.core.ui.theme.NaviColors
 
-/** Long-press menu of a song: play it next or add it to the end of the queue. Confirms with a toast. */
+/**
+ * App-wide "add these songs to a playlist", provided once by the app (NaviApp) instead of being passed through every
+ * screen. null where it isn't provided (previews, tests).
+ */
+val LocalAddToPlaylist = staticCompositionLocalOf<((songIds: List<String>) -> Unit)?> { null }
+
+/**
+ * Long-press menu of a song: play it next or add it to the end of the queue (confirmed with a toast), and add it to
+ * a playlist (with [songId] and [LocalAddToPlaylist] available).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongActionsSheet(
@@ -39,8 +49,10 @@ fun SongActionsSheet(
     coverArtId: String?,
     onEnqueue: (EnqueuePosition) -> Unit,
     onDismiss: () -> Unit,
+    songId: String? = null,
 ) {
     val context = LocalContext.current
+    val addToPlaylist = LocalAddToPlaylist.current
     fun enqueue(position: EnqueuePosition, confirmation: Int) {
         onEnqueue(position)
         Toast.makeText(context, confirmation, Toast.LENGTH_SHORT).show()
@@ -64,6 +76,12 @@ fun SongActionsSheet(
         }
         Action(R.drawable.ic_queue_music, stringResource(R.string.song_add_to_queue)) {
             enqueue(EnqueuePosition.End, R.string.song_queued_end)
+        }
+        if (songId != null && addToPlaylist != null) {
+            Action(R.drawable.ic_playlist_add, stringResource(R.string.song_add_to_playlist)) {
+                onDismiss()
+                addToPlaylist(listOf(songId))
+            }
         }
         Spacer(Modifier.height(16.dp))
     }

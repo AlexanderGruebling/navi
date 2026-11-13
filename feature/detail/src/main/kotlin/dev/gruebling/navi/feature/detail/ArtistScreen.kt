@@ -289,6 +289,7 @@ private fun TopSongs(
                 coverArtId = track.coverArtId,
                 onEnqueue = { position -> onEnqueue(index, position) },
                 onDismiss = { actionsFor = null },
+                songId = track.songId,
             )
         }
     }

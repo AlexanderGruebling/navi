@@ -17,4 +17,16 @@
         <item quantity="one">%d album</item>
         <item quantity="other">%d albums</item>
     </plurals>
+    <string name="playlist_edit">Edit playlist</string>
+    <string name="playlist_edit_name">Name</string>
+    <string name="playlist_edit_save">Save</string>
+    <string name="playlist_edit_cancel">Cancel</string>
+    <string name="playlist_edit_remove_song">Remove %1$s</string>
+    <string name="playlist_edit_reorder">Drag to reorder</string>
+    <string name="playlist_edit_delete">Delete playlist</string>
+    <string name="playlist_edit_delete_title">Delete “%1$s”?</string>
+    <string name="playlist_edit_delete_text">The playlist is deleted on the server. The songs stay in your library.</string>
+    <string name="playlist_edit_empty">No songs left. Saving keeps the playlist, empty.</string>
+    <string name="playlist_edit_save_failed">Couldn\'t save the playlist</string>
+    <string name="playlist_edit_delete_failed">Couldn\'t delete the playlist</string>
 </resources>

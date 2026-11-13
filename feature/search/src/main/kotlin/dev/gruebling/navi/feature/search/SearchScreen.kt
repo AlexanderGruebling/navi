@@ -208,6 +208,7 @@ private fun Results(
                 coverArtId = song.coverArt?.value,
                 onEnqueue = { position -> onEnqueueSong(index, position) },
                 onDismiss = { actionsFor = null },
+                songId = song.id.value,
             )
         }
     }

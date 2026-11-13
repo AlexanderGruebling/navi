@@ -27,6 +27,7 @@
     <string name="cd_song_actions">More options</string>
     <string name="song_play_next">Play next</string>
     <string name="song_add_to_queue">Add to queue</string>
+    <string name="song_add_to_playlist">Add to playlist…</string>
     <string name="song_queued_next">Plays next</string>
     <string name="song_queued_end">Added to queue</string>
     <string name="cd_download">Download</string>
