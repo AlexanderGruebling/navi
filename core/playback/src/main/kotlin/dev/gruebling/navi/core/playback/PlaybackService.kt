@@ -14,6 +14,7 @@ import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.AndroidEntryPoint
+import dev.gruebling.navi.core.data.session.ServerFeatures
 import dev.gruebling.navi.core.playback.di.ArtworkDataSource
 import dev.gruebling.navi.core.playback.di.AudioDataSource
 import javax.inject.Inject
@@ -38,6 +39,7 @@ class PlaybackService : MediaLibraryService() {
     @Inject lateinit var replayGain: ReplayGainApplier
     @Inject lateinit var offlineSkipper: OfflineSkipper
     @Inject lateinit var streamResolver: StreamResolver
+    @Inject lateinit var serverFeatures: ServerFeatures
 
     private val scope = MainScope()
     private var session: MediaLibrarySession? = null
@@ -56,7 +58,7 @@ class PlaybackService : MediaLibraryService() {
         // Load the next track in the queue ahead of time: instant skips and gapless transitions.
         exoPlayer.preloadConfiguration = ExoPlayer.PreloadConfiguration(/* targetPreloadDurationUs = */ 10_000_000L)
         // Everything else (session, scrobbling, queue saving) sees song time, also in transcoded streams.
-        val player = TranscodeSeekingPlayer(exoPlayer, streamResolver)
+        val player = TranscodeSeekingPlayer(exoPlayer, streamResolver) { serverFeatures.transcodeOffset.value }
 
         queuePersistence.attach(player, scope)
         scrobbler.attach(player, scope)

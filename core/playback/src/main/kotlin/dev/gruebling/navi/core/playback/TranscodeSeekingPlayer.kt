@@ -28,8 +28,8 @@ import dev.gruebling.navi.core.model.StreamQuality
  * A transcoded stream has no known length, so ExoPlayer marks it unseekable and drops
  * COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM. Media controllers then ignore seeks silently. This player:
  * - always offers that command for the app's streams,
- * - seeks in a transcoded song by restarting it from the server at that point (OpenSubsonic `transcodeOffset`): the
- *   queue item gets a `navi://stream/<id>?offset=…` URI, the shuffle order is kept,
+ * - seeks in a transcoded song by restarting it from the server at that point (OpenSubsonic `transcodeOffset`, if the
+ *   server has it): the queue item gets a `navi://stream/<id>?offset=…` URI, the shuffle order is kept,
  * - adds the offset to every position it reports, so UI, notification, scrobbling and queue saving see song time,
  * - puts the plain URI back once that item stops being current, so previous / repeat start the song from 0.
  *
@@ -39,6 +39,8 @@ import dev.gruebling.navi.core.model.StreamQuality
 internal class TranscodeSeekingPlayer(
     private val exo: ExoPlayer,
     private val qualities: StreamQualities,
+    /** Whether the server can start a transcoded stream mid-song (OpenSubsonic `transcodeOffset`). */
+    private val canStartMidSong: () -> Boolean,
 ) : ForwardingPlayer(exo) {
     private val handler = Handler(exo.applicationLooper)
     private val wrappedListeners = HashMap<Player.Listener, Player.Listener>()
@@ -170,7 +172,7 @@ internal class TranscodeSeekingPlayer(
     private fun startMidSongIfTranscoded() {
         val item = exo.currentMediaItem ?: return
         val uri = item.localConfiguration?.uri
-        if (!NaviUris.isStream(uri) || NaviUris.offsetSec(uri) > 0) return
+        if (!NaviUris.isStream(uri) || NaviUris.offsetSec(uri) > 0 || !canStartMidSong()) return
         val positionMs = exo.currentPosition
         val durationMs = item.mediaMetadata.durationMs
         // A position at the very end would ask the server for a stream past the song; let it start over instead.
@@ -185,7 +187,8 @@ internal class TranscodeSeekingPlayer(
 
     override fun seekTo(mediaItemIndex: Int, positionMs: Long) {
         val quality = transcodedQualityAt(mediaItemIndex)
-        if (mediaItemIndex == currentMediaItemIndex && quality != null) {
+        // Without server support, a transcoded song can't be seeked in: ExoPlayer starts it over or ignores the seek.
+        if (mediaItemIndex == currentMediaItemIndex && quality != null && canStartMidSong()) {
             restartAt(mediaItemIndex, positionMs, quality)
         } else {
             super.seekTo(mediaItemIndex, positionMs)

@@ -21,6 +21,7 @@ class TranscodeSeekingPlayerTest {
         override fun qualityOf(songId: String): StreamQuality? = null
         override fun qualityForNewStream(songId: String) = forNewStream
     }
+    private var serverHasOffset = true
     private lateinit var exo: ExoPlayer
     private lateinit var player: TranscodeSeekingPlayer
     private val items = listOf("a", "b").map {
@@ -31,7 +32,7 @@ class TranscodeSeekingPlayerTest {
     @Before
     fun setUp() {
         exo = TestExoPlayerBuilder(ApplicationProvider.getApplicationContext()).build()
-        player = TranscodeSeekingPlayer(exo, qualities)
+        player = TranscodeSeekingPlayer(exo, qualities) { serverHasOffset }
     }
 
     @After
@@ -78,5 +79,15 @@ class TranscodeSeekingPlayerTest {
         player.prepare()
         player.seekTo(150_000)
         assertEquals(NaviUris.streamFrom("b", 150, opus), uriAt(1))
+    }
+
+    @Test
+    fun `without server support a transcoded song is never started mid-song`() {
+        serverHasOffset = false
+        player.setMediaItems(items, 1, 83_400)
+        player.prepare()
+        assertEquals(NaviUris.stream("b"), uriAt(1))
+        player.seekTo(150_000)
+        assertEquals(NaviUris.stream("b"), uriAt(1))
     }
 }
