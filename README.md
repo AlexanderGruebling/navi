@@ -135,6 +135,5 @@ on-device trace processor can't name the RenderThread when the app started befor
 - Android Auto (the browse tree is a stub).
 - Release signing key.
 - Gapless playback not yet verified with a gapless album.
-- Restoring the position of a transcoded track when the queue is restored.
 - Offline mode beyond downloads: covers only show if the image cache still has them. Downloaded playlists are
   synced when the app starts, not periodically in the background.

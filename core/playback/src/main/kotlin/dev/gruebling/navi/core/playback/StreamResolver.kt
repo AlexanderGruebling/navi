@@ -32,6 +32,10 @@ class StreamResolver @Inject constructor(
     /** The quality [songId] is currently streamed in, if it was opened in this process. */
     fun qualityOf(songId: String): StreamQuality? = lastQuality[songId]
 
+    /** The quality [songId] would be opened in now: original for a downloaded file, else the current preset. */
+    fun qualityForNewStream(songId: String): StreamQuality =
+        if (downloads.fileIfDownloaded(songId) != null) StreamQuality.Original else quality.current()
+
     override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
         val uri = dataSpec.uri
         if (uri.scheme != NaviUris.SCHEME) return dataSpec

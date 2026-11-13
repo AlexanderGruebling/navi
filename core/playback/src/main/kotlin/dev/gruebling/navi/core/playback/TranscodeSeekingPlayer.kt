@@ -158,9 +158,17 @@ internal class TranscodeSeekingPlayer(
         override fun hashCode() = d.hashCode()
     }
 
+    // Starting mid-song (a restored queue, or playback resumption): ExoPlayer can't seek into a transcoded stream,
+    // so the start item streams from that point instead.
+
+    override fun setMediaItems(mediaItems: List<MediaItem>, startIndex: Int, startPositionMs: Long) {
+        val (items, position) = startMidSong(mediaItems, startIndex, startPositionMs, resolver::qualityForNewStream)
+        super.setMediaItems(items, startIndex, position)
+    }
+
     // Seeking.
 
-    override fun seekTo(positionMs: Long) = seekTo(currentMediaItemIndex, positionMs)
+    override fun seekTo(positionMs: Long)= seekTo(currentMediaItemIndex, positionMs)
 
     override fun seekTo(mediaItemIndex: Int, positionMs: Long) {
         val quality = transcodedQualityAt(mediaItemIndex)
@@ -216,7 +224,28 @@ internal class TranscodeSeekingPlayer(
         if (order.length == exo.mediaItemCount) exo.setShuffleOrder(order)
     }
 
-    private companion object {
-        val ALWAYS_FOR_STREAMS = intArrayOf(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM, COMMAND_SEEK_TO_PREVIOUS)
+    internal companion object {
+        private val ALWAYS_FOR_STREAMS = intArrayOf(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM, COMMAND_SEEK_TO_PREVIOUS)
+
+        /**
+         * The items and stream start position for starting at [startPositionMs] into item [startIndex]: a
+         * transcoded start item gets an offset URI and starts at 0. Anything else is returned as given.
+         */
+        fun startMidSong(
+            items: List<MediaItem>,
+            startIndex: Int,
+            startPositionMs: Long,
+            qualityFor: (songId: String) -> StreamQuality,
+        ): Pair<List<MediaItem>, Long> {
+            val item = items.getOrNull(startIndex)
+            val offsetSec = startPositionMs / 1_000
+            if (item == null || startPositionMs == C.TIME_UNSET || offsetSec <= 0) return items to startPositionMs
+            if (!NaviUris.isStream(item.localConfiguration?.uri) || NaviUris.offsetSec(item.localConfiguration?.uri) > 0) {
+                return items to startPositionMs
+            }
+            val quality = qualityFor(item.mediaId).takeIf { !it.isOriginal } ?: return items to startPositionMs
+            val moved = item.buildUpon().setUri(NaviUris.streamFrom(item.mediaId, offsetSec, quality)).build()
+            return items.toMutableList().also { it[startIndex] = moved } to 0L
+        }
     }
 }
