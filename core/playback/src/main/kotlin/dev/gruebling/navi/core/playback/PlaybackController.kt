@@ -182,7 +182,9 @@ class PlaybackController @Inject constructor(
                 else -> RepeatMode.Off
             },
             hasNext = c.hasNextMediaItem(),
-            hasPrevious = c.hasPreviousMediaItem() || c.currentPosition > 3_000,
+            // Not "a previous item, or past 3 s": state is only published on player events, so a position check
+            // would go stale. "Previous" is always useful anyway (it restarts the song or goes back).
+            hasPrevious = c.isCommandAvailable(Player.COMMAND_SEEK_TO_PREVIOUS),
             error = c.playerError?.let { "${it.errorCodeName}: ${it.message}" },
         )
     }

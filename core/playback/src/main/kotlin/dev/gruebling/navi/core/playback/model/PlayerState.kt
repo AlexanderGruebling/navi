@@ -30,6 +30,7 @@ data class PlayerState(
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.Off,
     val hasNext: Boolean = false,
+    /** Whether "previous" does anything: go to the previous song or back to the start of this one. */
     val hasPrevious: Boolean = false,
     val error: String? = null,
 ) {
