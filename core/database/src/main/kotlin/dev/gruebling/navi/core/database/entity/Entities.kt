@@ -124,7 +124,13 @@ data class PlaylistSongEntity(
     val songId: String,
 )
 
-/** Local-only settings. Separate table so server refreshes never overwrite them. */
+/**
+ * Local-only playlist state. Separate table so server refreshes never overwrite it.
+ *
+ * [groupOverride], [pinned] and [sortOrder] are no longer used: the user's playlist settings moved to
+ * PlaylistSettingsStore (DataStore), which survives schema changes. They are only read once to take them over;
+ * drop them with the next schema change.
+ */
 @Entity(tableName = "playlist_prefs")
 data class PlaylistPrefsEntity(
     @PrimaryKey val playlistId: String,
@@ -145,8 +151,5 @@ data class AlbumListEntryEntity(
 
 data class PlaylistWithPrefs(
     @Embedded val playlist: PlaylistEntity,
-    val groupOverride: String?,
-    val pinned: Boolean?,
-    val sortOrder: Int?,
     val seenSignature: String?,
 )

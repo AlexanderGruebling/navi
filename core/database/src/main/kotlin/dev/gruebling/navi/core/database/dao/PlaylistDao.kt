@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 interface PlaylistDao {
     @Query(
         """
-        SELECT p.*, pr.groupOverride, pr.pinned, pr.sortOrder, pr.seenSignature
+        SELECT p.*, pr.seenSignature
         FROM playlists p LEFT JOIN playlist_prefs pr ON pr.playlistId = p.id
         ORDER BY p.position
         """,
@@ -24,7 +24,7 @@ interface PlaylistDao {
 
     @Query(
         """
-        SELECT p.*, pr.groupOverride, pr.pinned, pr.sortOrder, pr.seenSignature
+        SELECT p.*, pr.seenSignature
         FROM playlists p LEFT JOIN playlist_prefs pr ON pr.playlistId = p.id
         WHERE p.id = :id
         """,
@@ -70,6 +70,10 @@ interface PlaylistDao {
     suspend fun prefs(id: String): PlaylistPrefsEntity?
 
     @Upsert suspend fun upsertPrefs(prefs: PlaylistPrefsEntity)
+
+    /** For taking over the old playlist settings once (see [PlaylistPrefsEntity]). */
+    @Query("SELECT * FROM playlist_prefs")
+    suspend fun allPrefs(): List<PlaylistPrefsEntity>
 
     @Query("DELETE FROM playlist_prefs WHERE playlistId = :id")
     suspend fun deletePrefs(id: String)

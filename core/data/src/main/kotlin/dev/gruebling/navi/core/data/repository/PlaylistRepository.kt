@@ -4,12 +4,14 @@ import androidx.room.withTransaction
 import dev.gruebling.navi.core.data.mapping.toDomain
 import dev.gruebling.navi.core.data.mapping.toEntity
 import dev.gruebling.navi.core.data.mapping.toInstant
+import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.data.util.suspendRunCatching
 import dev.gruebling.navi.core.database.NaviDatabase
 import dev.gruebling.navi.core.database.dao.PlaylistDao
 import dev.gruebling.navi.core.database.dao.SongDao
 import dev.gruebling.navi.core.database.entity.PlaylistPrefsEntity
 import dev.gruebling.navi.core.database.entity.PlaylistWithPrefs
+import dev.gruebling.navi.core.datastore.PlaylistSettingsStore
 import dev.gruebling.navi.core.model.CoverArtId
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistDetail
@@ -26,6 +28,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -40,22 +44,38 @@ class PlaylistRepository @Inject constructor(
     private val playlistDao: PlaylistDao,
     private val songDao: SongDao,
     private val db: NaviDatabase,
+    private val settingsStore: PlaylistSettingsStore,
 ) {
     private val grouping = PlaylistGrouping()
 
+    /** The user's playlist settings, after taking over the ones from the old database table (once). */
+    private val settings: Flow<Map<String, PlaylistSettings>> = flow {
+        settingsStore.importOnce {
+            playlistDao.allPrefs().associate {
+                it.playlistId to PlaylistSettings(
+                    groupOverride = it.groupOverride?.let { name -> PlaylistGroup.entries.firstOrNull { g -> g.name == name } },
+                    pinned = it.pinned,
+                    sortOrder = it.sortOrder,
+                )
+            }
+        }
+        emitAll(settingsStore.settings)
+    }
+
     /** All playlists in Home order: by group, then pinned, manual order, "Neu", server order. */
     fun observePlaylists(): Flow<List<Playlist>> =
-        playlistDao.observeAll()
-            .map { rows -> rows.map { it.toDomain() }.sortedWith(HOME_ORDER) }
-            .distinctUntilChanged()
+        combine(playlistDao.observeAll(), settings) { rows, settings ->
+            rows.map { it.toDomain(settings[it.playlist.id]) }.sortedWith(HOME_ORDER)
+        }.distinctUntilChanged()
 
     fun observePlaylist(id: PlaylistId): Flow<PlaylistDetail?> =
         combine(
             playlistDao.observe(id.value),
             playlistDao.observeSongs(id.value),
             playlistDao.observeMosaic(id.value),
-        ) { row, songs, mosaic ->
-            row?.let { PlaylistDetail(it.toDomain(), songs.map { s -> s.toDomain() }, mosaic.map(::CoverArtId)) }
+            settings,
+        ) { row, songs, mosaic, settings ->
+            row?.let { PlaylistDetail(it.toDomain(settings[id.value]), songs.map { s -> s.toDomain() }, mosaic.map(::CoverArtId)) }
         }.distinctUntilChanged()
 
     /**
@@ -82,6 +102,7 @@ class PlaylistRepository @Inject constructor(
         playlistDao.replaceAll(
             remote.mapIndexed { i, p -> p.toEntity(position = i, contentSignature = cached[p.id]?.contentSignature) },
         )
+        settingsStore.retainOnly(remote.mapTo(HashSet()) { it.id })
         val toLoad = remote.filter { p ->
             val old = cached[p.id]
             when {
@@ -125,29 +146,15 @@ class PlaylistRepository @Inject constructor(
         if (prefs.seenSignature != signature) playlistDao.upsertPrefs(prefs.copy(seenSignature = signature))
     }
 
-    suspend fun updateSettings(id: PlaylistId, settings: PlaylistSettings) {
-        val prefs = playlistDao.prefs(id.value) ?: PlaylistPrefsEntity(id.value)
-        playlistDao.upsertPrefs(
-            prefs.copy(
-                groupOverride = settings.groupOverride?.name,
-                pinned = settings.pinned,
-                sortOrder = settings.sortOrder,
-            ),
-        )
-    }
+    suspend fun updateSettings(id: PlaylistId, settings: PlaylistSettings) = settingsStore.set(id.value, settings)
 
     /** Manual order within a group: [ids] in the wanted order get sortOrder 0, 1, 2, … */
-    suspend fun reorder(ids: List<PlaylistId>) {
-        ids.forEachIndexed { index, id ->
-            val prefs = playlistDao.prefs(id.value) ?: PlaylistPrefsEntity(id.value)
-            if (prefs.sortOrder != index) playlistDao.upsertPrefs(prefs.copy(sortOrder = index))
-        }
-    }
+    suspend fun reorder(ids: List<PlaylistId>) = settingsStore.setOrder(ids.map { it.value })
 
-    private fun PlaylistWithPrefs.toDomain(): Playlist {
+    private fun PlaylistWithPrefs.toDomain(settings: PlaylistSettings?): Playlist {
         val p = playlist
         val isSmart = p.validUntil != null
-        val override = groupOverride?.let { runCatching { PlaylistGroup.valueOf(it) }.getOrNull() }
+        val override = settings?.groupOverride
         val group = grouping.groupOf(
             name = p.name,
             comment = p.comment,
@@ -165,8 +172,8 @@ class PlaylistRepository @Inject constructor(
             changed = p.changed.toInstant(),
             isSmart = isSmart,
             group = group,
-            pinned = pinned == true,
-            sortOrder = sortOrder,
+            pinned = settings?.pinned == true,
+            sortOrder = settings?.sortOrder,
             hasNewContent = !isSmart && p.contentSignature != null && seenSignature != null &&
                 p.contentSignature != seenSignature,
             groupOverride = override,
@@ -184,3 +191,8 @@ class PlaylistRepository @Inject constructor(
 }
 
 private const val SONGS_PER_REQUEST = 100
+
+/** Logout: the playlist settings belong to the account's playlists. */
+class PlaylistSettingsCleaner @Inject constructor(private val store: PlaylistSettingsStore) : AccountCache {
+    override suspend fun clear() = store.clear()
+}

@@ -40,7 +40,7 @@ There is no lint, ktlint, detekt or spotless setup.
 - `core:datastore`: credentials and settings. The password is encrypted with AES-256-GCM using an Android Keystore key. If the key is lost, the user has to log in again.
 - `core:data`: repositories. Screens observe Room flows while the repositories refresh from the server in the background.
 - Use `suspendRunCatching` (`core/data/util/Results.kt`) instead of `runCatching`, so coroutine cancellation is not swallowed.
-- The Room DB uses `fallbackToDestructiveMigration`, so a schema change only needs a version bump. Schemas are exported to `core/database/schemas/`.
+- The Room DB uses `fallbackToDestructiveMigration`, so a schema change only needs a version bump. Schemas are exported to `core/database/schemas/`. Room is a cache only: anything the user sets lives in DataStore (`PlaylistSettingsStore`, `DownloadSettingsStore`), or a schema change wipes it.
 - Logout is `core:playback`'s `SignOut`. It stops playback, clears the DB, then deletes the credentials, and that last step switches the UI to login.
 
 **Playback** (`core:playback`):

@@ -5,10 +5,17 @@ import dev.gruebling.navi.core.data.testing.FakeSubsonicServer
 import dev.gruebling.navi.core.data.testing.FakeSubsonicServer.Companion.ok
 import dev.gruebling.navi.core.data.testing.FakeSubsonicServer.Companion.song
 import dev.gruebling.navi.core.data.testing.inMemoryDatabase
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import dev.gruebling.navi.core.database.NaviDatabase
+import dev.gruebling.navi.core.database.entity.PlaylistPrefsEntity
+import dev.gruebling.navi.core.datastore.PlaylistSettingsStore
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
 import dev.gruebling.navi.core.model.PlaylistSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
@@ -17,6 +24,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -26,6 +35,10 @@ class PlaylistRepositoryTest {
     private lateinit var server: FakeSubsonicServer
     private lateinit var db: NaviDatabase
     private lateinit var repo: PlaylistRepository
+    private lateinit var settings: PlaylistSettingsStore
+    private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @get:Rule val tmp = TemporaryFolder()
 
     // Mirrors what the real server reported (2026-11-10): everything readonly, smart ones have validUntil.
     private var chartsSongs = listOf("s1", "s2", "s3")
@@ -56,11 +69,13 @@ class PlaylistRepositoryTest {
             ok(""""playlist":${playlistJson(id).dropLast(1)},"entry":[$entries]}""")
         }
         db = inMemoryDatabase()
-        repo = PlaylistRepository(server.api, db.playlistDao(), db.songDao(), db)
+        settings = PlaylistSettingsStore(PreferenceDataStoreFactory.create(scope = storeScope) { tmp.newFile("settings.preferences_pb").also { it.delete() } })
+        repo = PlaylistRepository(server.api, db.playlistDao(), db.songDao(), db, settings)
     }
 
     @After
     fun tearDown() {
+        storeScope.cancel()
         db.close()
         server.close()
     }
@@ -142,6 +157,43 @@ class PlaylistRepositoryTest {
         repo.refreshPlaylists().getOrThrow()
         val forYou = repo.observePlaylists().first().filter { it.group == PlaylistGroup.ForYou }
         assertEquals(listOf("On Repeat", "90s Mix"), forYou.map { it.name }) // pinned first
+    }
+
+    @Test
+    fun `manual settings survive a wiped database`() = runTest {
+        repo.refreshPlaylists().getOrThrow()
+        repo.updateSettings(PlaylistId("repeat"), PlaylistSettings(groupOverride = PlaylistGroup.ForYou, pinned = true))
+        db.clearAllTables() // what a schema change does
+        repo.refreshPlaylists().getOrThrow()
+        val repeat = repo.observePlaylists().first().single { it.id.value == "repeat" }
+        assertEquals(PlaylistGroup.ForYou, repeat.group)
+        assertTrue(repeat.pinned)
+    }
+
+    @Test
+    fun `settings from the old database table are taken over once`() = runTest {
+        repo.refreshPlaylists().getOrThrow()
+        db.playlistDao().upsertPrefs(PlaylistPrefsEntity("repeat", groupOverride = "ForYou", pinned = true, sortOrder = 2))
+        val repeat = repo.observePlaylists().first().single { it.id.value == "repeat" }
+        assertEquals(PlaylistGroup.ForYou, repeat.groupOverride)
+        assertTrue(repeat.pinned)
+        assertEquals(2, repeat.sortOrder)
+
+        // Later changes win over the old table, which is never read again.
+        repo.updateSettings(PlaylistId("repeat"), PlaylistSettings())
+        assertFalse(repo.observePlaylists().first().single { it.id.value == "repeat" }.pinned)
+    }
+
+    @Test
+    fun `settings of deleted playlists and on logout are dropped`() = runTest {
+        repo.refreshPlaylists().getOrThrow()
+        repo.updateSettings(PlaylistId("charts"), PlaylistSettings(pinned = true))
+        repo.updateSettings(PlaylistId("mix"), PlaylistSettings(pinned = true))
+        serverPlaylists = listOf("mix", "repeat")
+        repo.refreshPlaylists().getOrThrow()
+        assertEquals(setOf("mix"), settings.settings.first().keys)
+        PlaylistSettingsCleaner(settings).clear()
+        assertTrue(settings.settings.first().isEmpty())
     }
 
     @Test
