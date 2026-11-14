@@ -46,4 +46,7 @@
         <item quantity="one">No network: skipped %d song that isn\'t downloaded</item>
         <item quantity="other">No network: skipped %d songs that aren\'t downloaded</item>
     </plurals>
+    <string name="release_type_album">Album</string>
+    <string name="release_type_ep">EP</string>
+    <string name="release_type_single">Single</string>
 </resources>

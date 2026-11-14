@@ -20,4 +20,11 @@
     <string name="home_status_offline">Offline</string>
     <string name="home_greeting_name">%1$s, %2$s</string>
     <string name="home_no_network">No network. Showing saved data; downloaded music plays as usual.</string>
+    <string name="home_new_releases">New releases</string>
+    <string name="home_new_releases_label">From artists you like</string>
+    <plurals name="home_new_releases_unseen">
+        <item quantity="one">%d unseen</item>
+        <item quantity="other">%d unseen</item>
+    </plurals>
+    <string name="home_new_releases_unseen_dot">Unseen</string>
 </resources>

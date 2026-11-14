@@ -44,4 +44,7 @@
         <item quantity="one">Kein Netz: %d nicht heruntergeladener Titel übersprungen</item>
         <item quantity="other">Kein Netz: %d nicht heruntergeladene Titel übersprungen</item>
     </plurals>
+    <string name="release_type_album">Album</string>
+    <string name="release_type_ep">EP</string>
+    <string name="release_type_single">Single</string>
 </resources>

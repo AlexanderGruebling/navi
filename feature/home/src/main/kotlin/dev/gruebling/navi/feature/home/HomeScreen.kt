@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,15 +36,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.gruebling.navi.core.model.AlbumListType
+import dev.gruebling.navi.core.model.NewRelease
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
@@ -51,9 +56,11 @@ import dev.gruebling.navi.core.ui.component.CoverTile
 import dev.gruebling.navi.core.ui.component.LetterAvatar
 import dev.gruebling.navi.core.ui.component.MonoLabel
 import dev.gruebling.navi.core.ui.component.NewBadge
+import dev.gruebling.navi.core.ui.component.ReleaseCover
 import dev.gruebling.navi.core.ui.component.ScreenPadding
 import dev.gruebling.navi.core.ui.component.SectionHeader
 import dev.gruebling.navi.core.ui.component.ShortcutTile
+import dev.gruebling.navi.core.ui.component.StatusDot
 import dev.gruebling.navi.core.ui.component.StatusLabel
 import dev.gruebling.navi.core.ui.image.CoverArt
 import dev.gruebling.navi.core.ui.theme.NaviColors
@@ -66,6 +73,8 @@ fun HomeScreen(
     onOpenPlaylist: (String) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenNewReleases: () -> Unit,
+    onOpenRelease: (String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -78,6 +87,12 @@ fun HomeScreen(
         onPlayPlaylist = viewModel::playPlaylist,
         onOpenAlbum = onOpenAlbum,
         onOpenSettings = onOpenSettings,
+        onOpenNewReleases = onOpenNewReleases,
+        onOpenRelease = { release ->
+            // In the library by now: straight to the real album.
+            val albumId = release.libraryAlbumId
+            if (release.inLibrary && albumId != null) onOpenAlbum(albumId.value) else onOpenRelease(release.id)
+        },
     )
 }
 
@@ -89,6 +104,8 @@ internal fun HomeContent(
     onPlayPlaylist: (PlaylistId) -> Unit,
     onOpenAlbum: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenNewReleases: () -> Unit = {},
+    onOpenRelease: (NewRelease) -> Unit = {},
 ) {
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
@@ -116,6 +133,27 @@ internal fun HomeContent(
                 item(key = "loading", contentType = "loading") {
                     Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
+                    }
+                }
+            }
+            if (state.newReleases.releases.isNotEmpty()) {
+                item(key = "releases-header", contentType = "sectionHeader") {
+                    val unseen = state.newReleases.unseen
+                    SectionHeader(
+                        stringResource(R.string.home_new_releases),
+                        label = if (unseen > 0) pluralStringResource(R.plurals.home_new_releases_unseen, unseen, unseen)
+                        else stringResource(R.string.home_new_releases_label),
+                        modifier = Modifier.clickable(role = Role.Button, onClick = onOpenNewReleases).testTag("home_new_releases"),
+                    )
+                }
+                item(key = "releases", contentType = "releaseRow") {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = ScreenPadding),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(state.newReleases.releases, key = { it.id }, contentType = { "releaseTile" }) { release ->
+                            ReleaseTile(release, onClick = { onOpenRelease(release) })
+                        }
                     }
                 }
             }
@@ -316,3 +354,39 @@ private val AlbumListType.title: Int
         AlbumListType.MostPlayed -> R.string.section_most_played
         AlbumListType.Random -> R.string.section_random
     }
+
+/** Tile of Home's "New releases" row: cover with the "not on your server" outline, unseen dot, title, artist. */
+@Composable
+private fun ReleaseTile(release: NewRelease, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .width(140.dp)
+            .clip(MaterialTheme.shapes.small)
+            .clickable(onClick = onClick)
+            .padding(bottom = 4.dp),
+    ) {
+        ReleaseCover(release.coverUrl, inLibrary = release.inLibrary, size = 140.dp, cornerRadius = 16.dp)
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                release.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (!release.seen) {
+                val unseen = stringResource(R.string.home_new_releases_unseen_dot)
+                StatusDot(Modifier.semantics { contentDescription = unseen })
+            }
+        }
+        Text(
+            release.artist,
+            style = MaterialTheme.typography.bodySmall,
+            color = NaviColors.TextSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}

@@ -47,4 +47,11 @@
     <string name="settings_download_remove_all_title">Remove all downloads?</string>
     <string name="settings_download_remove_all_text">All downloaded albums and playlists are deleted from this device.</string>
     <string name="settings_downloads_note">The quality applies to songs downloaded from now on. Downloaded playlists stay in sync with the server.</string>
+    <string name="settings_new_releases">New releases</string>
+    <string name="settings_release_feed">Release feed</string>
+    <string name="settings_release_feed_off">Off</string>
+    <string name="settings_release_feed_note">A releases.json from release-watch. It lists new releases from the artists you listen to; nothing is downloaded.</string>
+    <string name="settings_release_feed_hint">https://…/releases.json</string>
+    <string name="settings_release_feed_empty">Leave empty to turn new releases off.</string>
+    <string name="settings_save">Save</string>
 </resources>

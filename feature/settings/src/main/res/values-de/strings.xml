@@ -47,4 +47,11 @@
     <string name="settings_download_remove_all_title">Alle Downloads entfernen?</string>
     <string name="settings_download_remove_all_text">Alle heruntergeladenen Alben und Playlists werden von diesem Gerät gelöscht.</string>
     <string name="settings_downloads_note">Die Qualität gilt für Titel, die ab jetzt geladen werden. Heruntergeladene Playlists bleiben mit dem Server abgeglichen.</string>
+    <string name="settings_new_releases">Neue Releases</string>
+    <string name="settings_release_feed">Release-Feed</string>
+    <string name="settings_release_feed_off">Aus</string>
+    <string name="settings_release_feed_note">Eine releases.json von release-watch. Sie listet neue Releases der Artists, die du hörst; heruntergeladen wird nichts.</string>
+    <string name="settings_release_feed_hint">https://…/releases.json</string>
+    <string name="settings_release_feed_empty">Leer lassen, um neue Releases auszuschalten.</string>
+    <string name="settings_save">Speichern</string>
 </resources>

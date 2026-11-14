@@ -46,6 +46,7 @@ internal interface SettingsActions {
     fun setQuality(which: QualityDialog, preset: QualityPreset)
     fun setReplayGainMode(mode: ReplayGainMode)
     fun setDownloadOverMobileData(allow: Boolean)
+    fun setReleaseFeedUrl(url: String)
     fun removeAllDownloads()
     fun setGroup(playlist: Playlist, group: PlaylistGroup?)
     fun setPinned(playlist: Playlist, pinned: Boolean)
@@ -62,6 +63,7 @@ private class ViewModelActions(private val vm: SettingsViewModel) : SettingsActi
     }
     override fun setReplayGainMode(mode: ReplayGainMode) = vm.setReplayGainMode(mode)
     override fun setDownloadOverMobileData(allow: Boolean) = vm.setDownloadOverMobileData(allow)
+    override fun setReleaseFeedUrl(url: String) = vm.setReleaseFeedUrl(url)
     override fun removeAllDownloads() = vm.removeAllDownloads()
     override fun setGroup(playlist: Playlist, group: PlaylistGroup?) = vm.setGroup(playlist, group)
     override fun setPinned(playlist: Playlist, pinned: Boolean) = vm.setPinned(playlist, pinned)
@@ -78,6 +80,7 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
     var confirmRemoveDownloads by rememberSaveable { mutableStateOf(false) }
     var playlistDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmLogout by rememberSaveable { mutableStateOf(false) }
+    var feedDialog by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val listState = rememberLazyListState()
     val reorder = rememberPlaylistReorder(state.playlistGroups, listState, actions::reorder)
@@ -105,6 +108,7 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
                 onMobileData = actions::setDownloadOverMobileData,
                 onRemoveAll = { confirmRemoveDownloads = true },
             )
+            newReleasesSection(state, onEdit = { feedDialog = true })
             playlistsSection(reorder, onOpen = { playlistDialog = it.id.value }, onMove = actions::move)
             aboutSection(versionName)
         }
@@ -155,6 +159,17 @@ private fun SettingsContent(state: SettingsUiState, versionName: String, onBack:
                 onDismiss = { playlistDialog = null },
             )
         }
+    }
+
+    if (feedDialog) {
+        ReleaseFeedDialog(
+            current = state.releaseFeedUrl,
+            onSave = {
+                actions.setReleaseFeedUrl(it)
+                feedDialog = false
+            },
+            onDismiss = { feedDialog = false },
+        )
     }
 
     if (confirmLogout) {

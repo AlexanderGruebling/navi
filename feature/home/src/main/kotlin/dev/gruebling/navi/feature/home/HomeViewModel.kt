@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gruebling.navi.core.data.repository.AlbumRepository
+import dev.gruebling.navi.core.data.repository.NewReleaseRepository
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
 import dev.gruebling.navi.core.model.Album
 import dev.gruebling.navi.core.model.AlbumListType
+import dev.gruebling.navi.core.model.NewRelease
 import dev.gruebling.navi.core.model.Playlist
 import dev.gruebling.navi.core.model.PlaylistGroup
 import dev.gruebling.navi.core.model.PlaylistId
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,8 +40,13 @@ data class PlaylistSection(val group: PlaylistGroup, val playlists: ImmutableLis
 @Immutable
 data class AlbumSection(val type: AlbumListType, val albums: ImmutableList<Album>)
 
+/** Home's "New releases" row: the newest releases, unseen first. Empty = the row is hidden. */
+@Immutable
+data class NewReleasesRow(val releases: ImmutableList<NewRelease> = persistentListOf(), val unseen: Int = 0)
+
 @Immutable
 data class HomeUiState(
+    val newReleases: NewReleasesRow = NewReleasesRow(),
     val playlistSections: ImmutableList<PlaylistSection> = persistentListOf(),
     val albumSections: ImmutableList<AlbumSection> = persistentListOf(),
     val isRefreshing: Boolean = false,
@@ -55,12 +63,15 @@ data class HomeUiState(
     val noNetwork: Boolean = false,
 )
 
+private const val HOME_RELEASES = 12
+
 private val HOME_ALBUM_LISTS = listOf(AlbumListType.RecentlyPlayed, AlbumListType.RecentlyAdded, AlbumListType.MostPlayed)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val playlists: PlaylistRepository,
     private val albums: AlbumRepository,
+    private val newReleases: NewReleaseRepository,
     private val playback: PlaybackController,
     private val session: SessionManager,
     network: NetworkMonitor,
@@ -77,18 +88,27 @@ class HomeViewModel @Inject constructor(
             .toImmutableList()
     }
 
+    private val releaseRow = newReleases.observeReleases().map { all ->
+        NewReleasesRow(
+            releases = all.sortedBy { it.seen }.take(HOME_RELEASES).toImmutableList(),
+            unseen = all.count { !it.seen },
+        )
+    }
+
     val state: StateFlow<HomeUiState> = combine(
         playlists.observePlaylists(),
         albumSections,
         combine(refreshing, refreshFailed, hasNetwork, ::Triple),
         session.state,
-    ) { playlistList, albumList, (isRefreshing, failed, online), sessionState ->
+        releaseRow,
+    ) { playlistList, albumList, (isRefreshing, failed, online), sessionState, releases ->
         val login = sessionState as? SessionState.LoggedIn
         val sections = playlistList.groupBy { it.group }
             .toSortedMap(compareBy { it.ordinal })
             .map { (group, items) -> PlaylistSection(group, items.toImmutableList()) }
             .toImmutableList()
         HomeUiState(
+            newReleases = releases,
             playlistSections = sections,
             albumSections = albumList,
             isRefreshing = isRefreshing,
@@ -114,6 +134,8 @@ class HomeViewModel @Inject constructor(
         if (refreshing.value) return
         viewModelScope.launch {
             if (userInitiated) refreshing.value = true
+            // The release feed is another server: its failures don't count as "server unreachable".
+            launch { newReleases.refresh() }
             val results = buildList {
                 add(async { playlists.refreshPlaylists() })
                 HOME_ALBUM_LISTS.forEach { add(async { albums.refreshAlbumList(it) }) }

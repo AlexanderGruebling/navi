@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import dagger.multibindings.Multibinds
 import dev.gruebling.navi.core.data.repository.LyricsRepository
+import dev.gruebling.navi.core.data.repository.NewReleaseRepository
 import dev.gruebling.navi.core.data.repository.PlaylistSettingsCleaner
 import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.data.session.SessionManager
@@ -22,4 +23,6 @@ abstract class DataModule {
     @Binds @IntoSet abstract fun lyricsCache(impl: LyricsRepository): AccountCache
 
     @Binds @IntoSet abstract fun playlistSettingsCache(impl: PlaylistSettingsCleaner): AccountCache
+
+    @Binds @IntoSet abstract fun newReleaseMarks(impl: NewReleaseRepository): AccountCache
 }

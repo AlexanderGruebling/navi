@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.gruebling.navi.core.network.BuildConfig
 import dev.gruebling.navi.core.network.NoHttpsDowngradeInterceptor
+import dev.gruebling.navi.core.network.ReleaseFeedApi
 import dev.gruebling.navi.core.network.SubsonicApi
 import dev.gruebling.navi.core.network.SubsonicClientFactory
 import dev.gruebling.navi.core.network.SubsonicRequestInterceptor
@@ -49,4 +50,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun subsonicApi(client: OkHttpClient, json: Json): SubsonicApi = SubsonicClientFactory.createApi(client, json)
+
+    @Provides
+    @Singleton
+    fun releaseFeedApi(client: OkHttpClient, json: Json): ReleaseFeedApi = ReleaseFeedApi.create(client, json)
 }

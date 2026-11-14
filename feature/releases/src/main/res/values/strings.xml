@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="releases_title">New releases</string>
+    <string name="releases_label">From artists you like</string>
+    <string name="releases_mark_all_seen">Mark all seen</string>
+    <string name="releases_info">Dashed outline = not on your server. Info only, nothing to play yet.</string>
+    <string name="releases_filter_all">All</string>
+    <string name="releases_filter_albums">Albums</string>
+    <string name="releases_filter_eps">EPs</string>
+    <string name="releases_filter_singles">Singles</string>
+    <string name="releases_filter_saved">Saved</string>
+    <string name="releases_this_week">This week</string>
+    <string name="releases_earlier">Earlier</string>
+    <string name="releases_now_in_library">Now in library</string>
+    <string name="releases_unseen">Unseen</string>
+    <string name="releases_save">Save for later</string>
+    <string name="releases_unsave">Remove from saved</string>
+    <string name="releases_empty">No new releases from your artists right now.</string>
+    <string name="releases_empty_filter">Nothing here with this filter.</string>
+    <string name="releases_failed">Can\'t reach the release feed. Showing saved data.</string>
+    <string name="releases_failed_empty">Can\'t reach the release feed. Pull to try again.</string>
+    <string name="release_label">New release</string>
+    <string name="release_open_external">Open release page</string>
+    <string name="release_saved">Saved</string>
+    <string name="release_mark_seen">Mark seen</string>
+    <string name="release_seen">Seen</string>
+    <string name="release_info_only">Info only</string>
+    <string name="release_not_in_library">Not on %1$s yet. Once it\'s in your library, it turns solid here and becomes playable.</string>
+    <string name="release_not_in_library_no_host">Not on your server yet. Once it\'s in your library, it turns solid here and becomes playable.</string>
+    <string name="release_in_library">It\'s in your library now.</string>
+    <string name="release_open_album">Open album</string>
+    <string name="release_tracklist">Tracklist</string>
+    <string name="release_missing">This release is no longer in the feed.</string>
+</resources>

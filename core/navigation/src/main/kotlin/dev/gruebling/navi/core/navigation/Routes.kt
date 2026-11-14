@@ -18,3 +18,5 @@ enum class TopLevelDestination(val route: NavKey) {
 @Serializable data class ArtistRoute(val artistId: String) : NavKey
 @Serializable data class PlaylistRoute(val playlistId: String) : NavKey
 @Serializable data object SettingsRoute : NavKey
+@Serializable data object NewReleasesRoute : NavKey
+@Serializable data class NewReleaseRoute(val releaseId: String) : NavKey

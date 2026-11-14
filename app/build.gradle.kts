@@ -54,6 +54,7 @@ dependencies {
     implementation(project(":feature:player"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:addtoplaylist"))
+    implementation(project(":feature:releases"))
     implementation(project(":feature:widget"))
 
     implementation(libs.androidx.core.ktx)

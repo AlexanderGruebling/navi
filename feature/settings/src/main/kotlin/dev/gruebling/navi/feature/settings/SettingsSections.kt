@@ -124,6 +124,18 @@ internal fun LazyListScope.playlistsSection(reorder: PlaylistReorder, onOpen: (P
     }
 }
 
+internal fun LazyListScope.newReleasesSection(state: SettingsUiState, onEdit: () -> Unit) {
+    item(key = "releases-header") { Header(stringResource(R.string.settings_new_releases)) }
+    item(key = "release-feed") {
+        ChoiceItem(
+            stringResource(R.string.settings_release_feed),
+            state.releaseFeedUrl.ifBlank { stringResource(R.string.settings_release_feed_off) },
+            onEdit,
+        )
+    }
+    item(key = "release-feed-note") { Note(stringResource(R.string.settings_release_feed_note)) }
+}
+
 internal fun LazyListScope.aboutSection(versionName: String) {
     item(key = "about-header") { Header(stringResource(R.string.settings_about)) }
     item(key = "about") {

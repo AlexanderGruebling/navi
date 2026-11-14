@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="releases_title">Neue Releases</string>
+    <string name="releases_label">Von Artists, die du hörst</string>
+    <string name="releases_mark_all_seen">Alle gesehen</string>
+    <string name="releases_info">Gestrichelter Rand = nicht auf deinem Server. Nur zur Info, noch nichts abspielbar.</string>
+    <string name="releases_filter_all">Alle</string>
+    <string name="releases_filter_albums">Alben</string>
+    <string name="releases_filter_eps">EPs</string>
+    <string name="releases_filter_singles">Singles</string>
+    <string name="releases_filter_saved">Gemerkt</string>
+    <string name="releases_this_week">Diese Woche</string>
+    <string name="releases_earlier">Früher</string>
+    <string name="releases_now_in_library">Jetzt in der Bibliothek</string>
+    <string name="releases_unseen">Ungesehen</string>
+    <string name="releases_save">Für später merken</string>
+    <string name="releases_unsave">Nicht mehr merken</string>
+    <string name="releases_empty">Gerade keine neuen Releases von deinen Artists.</string>
+    <string name="releases_empty_filter">Mit diesem Filter ist nichts da.</string>
+    <string name="releases_failed">Release-Feed nicht erreichbar. Zeige gespeicherte Daten.</string>
+    <string name="releases_failed_empty">Release-Feed nicht erreichbar. Zum erneuten Versuch nach unten ziehen.</string>
+    <string name="release_label">Neues Release</string>
+    <string name="release_open_external">Release-Seite öffnen</string>
+    <string name="release_saved">Gemerkt</string>
+    <string name="release_mark_seen">Als gesehen markieren</string>
+    <string name="release_seen">Gesehen</string>
+    <string name="release_info_only">Nur Info</string>
+    <string name="release_not_in_library">Noch nicht auf %1$s. Sobald es in deiner Bibliothek ist, wird es hier ausgefüllt und abspielbar.</string>
+    <string name="release_not_in_library_no_host">Noch nicht auf deinem Server. Sobald es in deiner Bibliothek ist, wird es hier ausgefüllt und abspielbar.</string>
+    <string name="release_in_library">Ist jetzt in deiner Bibliothek.</string>
+    <string name="release_open_album">Album öffnen</string>
+    <string name="release_tracklist">Titelliste</string>
+    <string name="release_missing">Dieses Release ist nicht mehr im Feed.</string>
+</resources>

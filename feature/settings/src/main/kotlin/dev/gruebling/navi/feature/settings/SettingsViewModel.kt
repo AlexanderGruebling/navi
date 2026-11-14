@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.gruebling.navi.core.data.repository.NewReleaseRepository
 import dev.gruebling.navi.core.data.repository.PlaylistRepository
 import dev.gruebling.navi.core.data.session.SessionManager
 import dev.gruebling.navi.core.data.session.SessionState
@@ -40,6 +41,8 @@ data class SettingsUiState(
     val downloadOverMobileData: Boolean = false,
     val downloadedBytes: Long = 0,
     val playlistGroups: ImmutableList<PlaylistGroupUi> = persistentListOf(),
+    /** URL of the new-releases feed; blank = off. */
+    val releaseFeedUrl: String = "",
 )
 
 /** Wrapper so the enum stays internal while the state class is public. */
@@ -53,14 +56,15 @@ class SettingsViewModel @Inject constructor(
     private val playlists: PlaylistRepository,
     private val signOut: SignOut,
     private val downloads: Downloads,
+    private val newReleases: NewReleaseRepository,
 ) : ViewModel() {
     val state: StateFlow<SettingsUiState> = combine(
         session.state,
-        streaming.settings,
+        combine(streaming.settings, newReleases.feedUrl, ::Pair),
         streaming.replayGainMode,
         playlists.observePlaylists(),
         combine(downloads.quality, downloads.allowMobileData, downloads.totalBytes, ::Triple),
-    ) { s, quality, replayGain, list, (downloadQuality, mobile, bytes) ->
+    ) { s, (quality, feedUrl), replayGain, list, (downloadQuality, mobile, bytes) ->
         val loggedIn = s as? SessionState.LoggedIn
         SettingsUiState(
             serverUrl = loggedIn?.serverUrl,
@@ -71,6 +75,7 @@ class SettingsViewModel @Inject constructor(
             downloadQuality = QualityPresetUi(QualityPreset.of(downloadQuality)),
             downloadOverMobileData = mobile,
             downloadedBytes = bytes,
+            releaseFeedUrl = feedUrl,
             // Same order as on Home: group, pinned first, manual order.
             playlistGroups = list.groupBy { it.group }
                 .toSortedMap(compareBy { it.ordinal })
@@ -92,6 +97,13 @@ class SettingsViewModel @Inject constructor(
 
     fun removeAllDownloads() {
         viewModelScope.launch { downloads.removeAll() }
+    }
+
+    fun setReleaseFeedUrl(url: String) {
+        viewModelScope.launch {
+            newReleases.setFeedUrl(url)
+            newReleases.refresh()
+        }
     }
 
     fun setReplayGainMode(mode: ReplayGainMode) {

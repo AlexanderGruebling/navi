@@ -56,6 +56,8 @@ import dev.gruebling.navi.core.navigation.AlbumRoute
 import dev.gruebling.navi.core.navigation.ArtistRoute
 import dev.gruebling.navi.core.navigation.HomeRoute
 import dev.gruebling.navi.core.navigation.LibraryRoute
+import dev.gruebling.navi.core.navigation.NewReleaseRoute
+import dev.gruebling.navi.core.navigation.NewReleasesRoute
 import dev.gruebling.navi.core.navigation.PlaylistRoute
 import dev.gruebling.navi.core.navigation.SearchRoute
 import dev.gruebling.navi.core.navigation.SettingsRoute
@@ -72,6 +74,8 @@ import dev.gruebling.navi.feature.home.HomeScreen
 import dev.gruebling.navi.feature.library.LibraryScreen
 import dev.gruebling.navi.feature.player.FullPlayerHost
 import dev.gruebling.navi.feature.player.MiniPlayer
+import dev.gruebling.navi.feature.releases.ReleaseDetailScreen
+import dev.gruebling.navi.feature.releases.ReleasesScreen
 import dev.gruebling.navi.feature.search.SearchScreen
 import dev.gruebling.navi.feature.settings.SettingsScreen
 import dev.gruebling.navi.core.download.Downloads
@@ -136,6 +140,22 @@ fun NaviApp(appState: NaviAppState = rememberNaviAppState()) {
                         onOpenPlaylist = { appState.navigate(PlaylistRoute(it)) },
                         onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
                         onOpenSettings = { appState.navigate(SettingsRoute) },
+                        onOpenNewReleases = { appState.navigate(NewReleasesRoute) },
+                        onOpenRelease = { appState.navigate(NewReleaseRoute(it)) },
+                    )
+                }
+                entry<NewReleasesRoute> {
+                    ReleasesScreen(
+                        onBack = { appState.goBack() },
+                        onOpenRelease = { appState.navigate(NewReleaseRoute(it)) },
+                        onOpenAlbum = { appState.navigate(AlbumRoute(it)) },
+                    )
+                }
+                entry<NewReleaseRoute> {
+                    ReleaseDetailScreen(
+                        it.releaseId,
+                        onBack = { appState.goBack() },
+                        onOpenAlbum = { id -> appState.navigate(AlbumRoute(id)) },
                     )
                 }
                 entry<SearchRoute> {
