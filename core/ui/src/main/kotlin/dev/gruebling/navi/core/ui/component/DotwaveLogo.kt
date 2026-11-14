@@ -1,5 +1,7 @@
 package dev.gruebling.navi.core.ui.component
 
+import android.graphics.Bitmap
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -7,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -47,6 +50,23 @@ fun DotwaveLogo(modifier: Modifier = Modifier, size: Dp = 48.dp, showUnlit: Bool
                 }
             },
     )
+}
+
+/**
+ * [DotwaveLogo] as a bitmap of [sizePx] square, for places outside Compose (home screen widgets): lit dots only, on
+ * a transparent background.
+ */
+fun dotwaveLogoBitmap(sizePx: Int): Bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).also { bitmap ->
+    val canvas = android.graphics.Canvas(bitmap)
+    val unit = sizePx / 105f
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    for (row in 0 until 9) {
+        for (col in 0 until 9) {
+            if (abs(row - 4) > WAVE[col]) continue
+            paint.color = (if (col == 4) NaviColors.Accent else NaviColors.White).toArgb()
+            canvas.drawCircle((col * 12 + 4.5f) * unit, (row * 12 + 4.5f) * unit, 4.5f * unit, paint)
+        }
+    }
 }
 
 /** Half-height of the lit run per column. */

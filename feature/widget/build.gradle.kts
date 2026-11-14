@@ -9,5 +9,4 @@ android {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:playback"))
-    implementation(libs.androidx.activity.compose)
 }

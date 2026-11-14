@@ -27,31 +27,19 @@
         </receiver>
 
         <receiver
-            android:name=".PlaylistWidget"
+            android:name=".MediaCardWidget"
             android:exported="false"
-            android:label="@string/widget_playlist_label">
+            android:label="@string/widget_media_card_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_playlist_info" />
+                android:resource="@xml/widget_media_card_info" />
         </receiver>
 
         <receiver
             android:name=".WidgetActionReceiver"
             android:exported="false" />
-
-        <!-- Started by the launcher when a playlist widget is placed or reconfigured. -->
-        <activity
-            android:name=".PlaylistWidgetConfigActivity"
-            android:exported="true"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.Navi.WidgetConfig">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
     </application>
 </manifest>

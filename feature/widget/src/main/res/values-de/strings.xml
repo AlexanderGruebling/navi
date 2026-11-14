@@ -4,11 +4,8 @@
     <string name="widget_player_description">Was gerade läuft, mit Zurück, Wiedergabe und Weiter.</string>
     <string name="widget_player_small_label">Player (klein)</string>
     <string name="widget_player_small_description">Cover, Titel und Wiedergabe/Pause, mit dem Fortschritt des Songs in Punkten.</string>
-    <string name="widget_playlist_label">Playlist</string>
-    <string name="widget_playlist_description">Spielt eine deiner Playlists mit einem Tipp ab.</string>
+    <string name="widget_media_card_label">Mediakarte</string>
+    <string name="widget_media_card_description">Was gerade läuft, mit Cover, Steuerung, Favorit und dem Fortschritt des Songs.</string>
     <string name="widget_now_playing">Läuft gerade</string>
     <string name="widget_nothing_playing">Gerade läuft nichts</string>
-    <string name="widget_play_playlist">%1$s abspielen</string>
-    <string name="widget_choose_playlist">Playlist wählen</string>
-    <string name="widget_no_playlists">Noch keine Playlists. Öffne zuerst Dotwave und melde dich an.</string>
 </resources>

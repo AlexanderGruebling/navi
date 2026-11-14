@@ -7,9 +7,8 @@ import android.os.Bundle
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/** 4×2 player. All player widgets are drawn by [NowPlayingWidgets]. */
-@AndroidEntryPoint
-class PlayerWidget : AppWidgetProvider() {
+/** Base of the player widgets: all of them are drawn by [NowPlayingWidgets], from the same state. */
+abstract class NowPlayingWidget : AppWidgetProvider() {
     @Inject lateinit var nowPlaying: NowPlayingWidgets
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = nowPlaying.refresh()
@@ -17,25 +16,14 @@ class PlayerWidget : AppWidgetProvider() {
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) = nowPlaying.refresh()
 }
 
-/** 2×2 light player. */
+/** 4×2 player with the dot-matrix title. */
 @AndroidEntryPoint
-class PlayerSmallWidget : AppWidgetProvider() {
-    @Inject lateinit var nowPlaying: NowPlayingWidgets
+class PlayerWidget : NowPlayingWidget()
 
-    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = nowPlaying.refresh()
-
-    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) = nowPlaying.refresh()
-}
-
-/** 4×1 pinned playlist; which one is picked in [PlaylistWidgetConfigActivity]. */
+/** 2×2 light player with progress dots. */
 @AndroidEntryPoint
-class PlaylistWidget : AppWidgetProvider() {
-    @Inject lateinit var playlists: PlaylistWidgets
+class PlayerSmallWidget : NowPlayingWidget()
 
-    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = playlists.update(ids)
-
-    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) =
-        playlists.update(intArrayOf(id))
-
-    override fun onDeleted(context: Context, ids: IntArray) = playlists.forget(ids)
-}
+/** 4×2 media card: logo and server, cover, controls, favorite, waveform progress. */
+@AndroidEntryPoint
+class MediaCardWidget : NowPlayingWidget()

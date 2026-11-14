@@ -7,6 +7,8 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Shader
+import android.net.Uri
+import android.os.SystemClock
 import androidx.core.graphics.createBitmap
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -16,6 +18,7 @@ import coil3.request.allowHardware
 import coil3.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.gruebling.navi.core.data.di.ApplicationScope
+import dev.gruebling.navi.core.data.repository.FavoritesRepository
 import dev.gruebling.navi.core.data.session.AccountCache
 import dev.gruebling.navi.core.data.session.SessionManager
 import dev.gruebling.navi.core.data.session.SessionState
@@ -30,7 +33,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,17 +50,18 @@ class NowPlayingWidgets @Inject constructor(
     @ApplicationContext private val context: Context,
     private val queuePersistence: QueuePersistence,
     private val session: SessionManager,
+    favorites: FavoritesRepository,
     @ApplicationScope private val appScope: CoroutineScope,
 ) : PlayerWatcher, AccountCache {
-    private val covers = WidgetCovers(context) {
-        // A process started by a widget hasn't restored the login yet; without it no cover URL can be built.
-        session.state.first { it != SessionState.Loading }
-    }
+    private val covers = WidgetCovers(context)
     private var player: Player? = null
     private var serviceScope: CoroutineScope? = null
     private var render: Job? = null
     private var ticker: Job? = null
+    private var shown: NowPlaying? = null
     private var shownDots = -1
+    private var shownBars = -1
+    private var starred: Set<String> = emptySet()
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
@@ -71,6 +77,19 @@ class NowPlayingWidgets @Inject constructor(
                 show(player.nowPlaying())
             }
             if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) followProgress(player)
+        }
+    }
+
+    init {
+        // The media card's heart follows favorites changed anywhere: in the app, or by the heart itself.
+        appScope.launch(Dispatchers.Main) {
+            favorites.observeFavorites().map { f -> f.songs.mapTo(HashSet()) { it.id.value } }.distinctUntilChanged().collect { ids ->
+                starred = ids
+                val current = shown ?: return@collect
+                if (current.starred == (current.songId in ids)) return@collect
+                val player = player
+                show(if (player != null) player.nowPlaying() else current.copy(starred = !current.starred))
+            }
         }
     }
 
@@ -105,14 +124,18 @@ class NowPlayingWidgets @Inject constructor(
     private fun showLater(now: suspend () -> NowPlaying?) {
         render?.cancel()
         render = appScope.launch(Dispatchers.Main) {
+            // A process started by a widget hasn't restored the login yet; covers and server name need it.
+            session.state.first { it != SessionState.Loading }
             val state = now()
             val cover = covers.load(state?.coverArt)
-            shownDots = state?.dots ?: 0
-            WidgetViews.pushPlayers(context, state, cover)
+            shown = state
+            shownDots = state?.progress(PROGRESS_DOTS) ?: 0
+            shownBars = state?.progress(PROGRESS_BARS) ?: 0
+            WidgetViews.pushPlayers(context, state, cover, serverName())
         }
     }
 
-    /** While playing, light the next progress dot when it's time; nothing else changes in between. */
+    /** While playing, light the next progress mark when it's time; nothing else changes in between. */
     private fun followProgress(player: Player) {
         ticker?.cancel()
         val scope = serviceScope ?: return
@@ -120,10 +143,13 @@ class NowPlayingWidgets @Inject constructor(
         ticker = scope.launch {
             while (isActive) {
                 delay(PROGRESS_TICK_MS)
-                val dots = player.progressDots()
-                if (dots != shownDots) {
+                val duration = player.durationMs()
+                val dots = progressOf(player.currentPosition, duration, PROGRESS_DOTS)
+                val bars = progressOf(player.currentPosition, duration, PROGRESS_BARS)
+                if (dots != shownDots || bars != shownBars) {
+                    WidgetViews.pushProgress(context, dots.takeIf { it != shownDots }, bars.takeIf { it != shownBars })
                     shownDots = dots
-                    WidgetViews.pushProgress(context, dots)
+                    shownBars = bars
                 }
             }
         }
@@ -132,46 +158,46 @@ class NowPlayingWidgets @Inject constructor(
     private suspend fun saved(): NowPlaying? {
         val saved = queuePersistence.load() ?: return null
         val item = saved.mediaItems.getOrNull(saved.startIndex) ?: return null
-        val duration = item.mediaMetadata.durationMs ?: 0L
-        return item.toNowPlaying(isPlaying = false, dots = dotsFor(saved.startPositionMs, duration))
+        return item.toNowPlaying(isPlaying = false, positionMs = saved.startPositionMs, durationMs = item.mediaMetadata.durationMs ?: 0L)
     }
 
     private fun Player.nowPlaying(): NowPlaying? {
         val item = currentMediaItem ?: return null
         val playing = playWhenReady && (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING)
-        return item.toNowPlaying(playing, progressDots())
+        return item.toNowPlaying(playing, currentPosition, durationMs())
     }
 
-    private fun Player.progressDots(): Int {
-        val duration = duration.takeIf { it > 0 } ?: currentMediaItem?.mediaMetadata?.durationMs ?: 0L
-        return dotsFor(currentPosition, duration)
-    }
+    private fun Player.durationMs(): Long = duration.takeIf { it > 0 } ?: currentMediaItem?.mediaMetadata?.durationMs ?: 0L
 
-    private fun MediaItem.toNowPlaying(isPlaying: Boolean, dots: Int): NowPlaying? = NowPlaying(
+    private fun MediaItem.toNowPlaying(isPlaying: Boolean, positionMs: Long, durationMs: Long): NowPlaying? = NowPlaying(
+        songId = mediaId,
         title = mediaMetadata.title?.toString() ?: return null,
         artist = mediaMetadata.artist?.toString(),
+        album = mediaMetadata.albumTitle?.toString(),
         coverArt = MediaItems.coverArtId(this),
         isPlaying = isPlaying,
-        dots = dots,
+        positionMs = positionMs,
+        positionAtMs = SystemClock.elapsedRealtime(),
+        durationMs = durationMs,
+        starred = mediaId in starred,
     )
 
-    private companion object {
-        const val PROGRESS_TICK_MS = 4_000L
+    /** The server's host name for the media card's header, like the design's "music.home". */
+    private fun serverName(): String? = session.current()?.serverUrl?.let { Uri.parse(it).host }
 
-        fun dotsFor(positionMs: Long, durationMs: Long): Int =
-            if (durationMs <= 0) 0 else (positionMs * PROGRESS_DOTS / durationMs).toInt().coerceIn(0, PROGRESS_DOTS)
+    private companion object {
+        const val PROGRESS_TICK_MS = 3_000L
     }
 }
 
 /** The current cover as a rounded bitmap, from Coil's caches. Keeps the last one, which most updates reuse. */
-private class WidgetCovers(private val context: Context, private val awaitLogin: suspend () -> Unit) {
+private class WidgetCovers(private val context: Context) {
     private var id: String? = null
     private var bitmap: Bitmap? = null
 
     suspend fun load(coverArt: String?): Bitmap? {
         if (coverArt == null) return null
         if (coverArt == id) return bitmap
-        awaitLogin()
         val request = ImageRequest.Builder(context)
             .data(CoverArtRequest(coverArt, SIZE_PX))
             .allowHardware(false)
